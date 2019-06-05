@@ -1,0 +1,38 @@
+language: cpp
+sudo: required
+
+env:
+  global:
+  # SSHHOST
+  - secure: "NEXUEA+ccm/I21ujCPuKYIHFb8Gogunr3nYysCRpTBNT40PsU9VFIy5vbmMxPAkCaMwk8XZ0rMHE3uaNGbBAGfoDL9v0Ban5wG/jA1JkmOAWUpFrUsbQeejXNRA04QcZ/4VeL6TgFegV2T6V0tLB4M6/X316dIPhS9Tat1ZUC8s="
+  # SSHUSER
+  - secure: "bYHqhcYYuSbciQa5mBqMxs3CbJkrxxD7/G4zDW2war1IcMh8AC/KPeoYIuhd/L2Mg9+tP++xCznKUJzX85Hu+8EyrMGkC/6zWpGYgyO27DH7wl+9AJjR191WJKkg+S6OqZmb/5v0rdJMDnGOZHrRVB3Vec9dBT+jDTQbyxrckxE="
+  # DEPLOY_TO directory
+  - secure: "PMp93w9HAYd0pR4aw2LT1sMIVmA06f01Xq2jaGW2iy74n3GrqBYe7H9aMR0WD1S6KH9sFydqFI11bCpwUQXPopl+8MPA34AS7V2gaxDUdE+UZnKKXpKV6KRPRp/txlryuEGspjFJM0bo5g1H5lPBSBFj8PB1Bf6BiloGl8TTuiY="
+
+services:
+  - docker
+
+matrix:
+  include:
+    - os: linux
+      env:
+        - OS_TYPE=ubuntu_docker
+        - OS_VERSION=bionic
+
+addons:
+  artifacts: true
+  ssh_known_hosts:
+    secure: "q0dQ9MrhnOCo031McxSdQIqw4N6tEyAZLq7mdbWkAJcXOh/CX58NjFvcdSfamleDUYRmg7KpCZPPgnbx2JtqVvWJv8aNnr67CE1GIjRP1Fxh2WaKS+VK+I6rro7GwCO2C9d+uffCt63LfZKqddF1T7vMI2IgHcu9irc5LCuw6Wo="
+
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./CI/travis/before_install_darwin ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./CI/travis/before_install_linux "$OS_TYPE" "$OS_VERSION" ; fi
+
+  - mkdir -p $TRAVIS_BUILD_DIR/build
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mkdir -p $TRAVIS_BUILD_DIR/build_tar ; fi
+
+script:
+  - if [[ -z "$ARCH" && "$TRAVIS_OS_NAME" == "linux" ]]; then ${TRAVIS_BUILD_DIR}/CI/travis/make_linux libm2k "$OS_TYPE" "$OS_VERSION" ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ${TRAVIS_BUILD_DIR}/CI/travis/make_darwin; fi
+
