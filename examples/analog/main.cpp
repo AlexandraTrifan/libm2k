@@ -5,6 +5,7 @@
 #include <libm2k/analog/m2kpowersupply.hpp>
 #include <libm2k/analog/m2kanalogin.hpp>
 #include <libm2k/analog/m2kanalogout.hpp>
+#include <unistd.h>
 
 using namespace std;
 using namespace libm2k;

@@ -160,3 +160,24 @@ if (BUILD_EXAMPLES)
 	add_subdirectory(examples)
 endif()
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	option(OSX_PACKAGE "Create a OSX package" ON)
+	set(CMAKE_MACOSX_RPATH ON)
+	set(SKIP_INSTALL_ALL ${OSX_PACKAGE})
+endif()
+
+if (NOT OSX_PACKAGE)
+	# Support creating some basic binpkgs via `make package`.
+	# Disabled if OSX_PACKAGE is enabled, as tarballs would end up empty otherwise.
+	option(ENABLE_PACKAGING "Create .deb/.rpm or .tar.gz packages via 'make package'" OFF)
+
+	if(ENABLE_PACKAGING)
+#		if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+#			include(cmake/DarwinPackaging.cmake)
+#		endif()
+		if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+			include(cmake/LinuxPackaging.cmake)
+		endif()
+	endif()
+endif()
+
