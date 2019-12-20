@@ -49,3 +49,33 @@ script:
   - if [[ -z "$ARCH" && "$TRAVIS_OS_NAME" == "linux" ]]; then ${TRAVIS_BUILD_DIR}/CI/travis/make_linux libm2k "$OS_TYPE" "$OS_VERSION" ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ${TRAVIS_BUILD_DIR}/CI/travis/make_darwin; fi
 
+before_deploy:
+  - if [[ ($OS_TYPE != doxygen) ]]; then . ${TRAVIS_BUILD_DIR}/CI/travis/before_deploy; fi
+
+deploy:
+  - provider: releases
+    api_key:
+      secure: buLwkQXbmIREOC1yTL1cVaZW4bbZ2lUajcKzIG64ius+uGxesru8UMVMjCEqYSMDH+NMzuY5QMMrzvRPuc5yjo/0p/t5O2YT5pikt0YJu2jTwvnXtMnhXOQCqk/nHa9t4pJza2WkqTov1BYv7xdYCYexG6dK27IMZd3zMKd3PnRzUe9RBum3mNZrYBpx1QLqaoDjZ9TLZDLLhrAoK7qU0vRTXMEnEYTtCJIYlloo/TQt9dSFEQiUdMfiRp23exDzUlYFmiut3RfvDTuZT1TaLjP8P+zT8sgc10ypxDct2+pOMUfNP/8ZWCTQ5trcfMmyxxKWPn4I2Qy3IyrFBInZwu5C5PxR+DGfsmqofqbN+rbDOhkYljbYH5hn1zmhws3WdU0sRGwbrNQ8LtJ1QEn2SXkx1PZYkjvFMv4LfkI3SxMvuqNNnHKqBa3ovTw7obyvpUb6katX28ampDxTIiXOo1QtOLTz6cxncrT2RnUD3ROK/iS8jJWh+Hnyu9YxAfb1dRWpOXRFBO6XB5++zT/rsU9Q/QyxUV8C6VWY0FvQoFJfeS62OYcxU4g+qnKOPinoLrSO1rnVjVDpudGweQ+ks9IN6/o1tJpt7Xj6zs/BPfCtKr2lZwxYREgfVuTpMXpCbSMdAxdOAxigjuEexwS2vchFu0s4luKRu8Bpq+Hob+M=
+    file:
+      - "${RELEASE_PKG_FILE_DEB}"
+      - "${RELEASE_PKG_FILE_RPM}"
+      - "${RELEASE_PKG_FILE_TGZ}"
+    skip_cleanup: true
+    on:
+      all_branches: true
+      repo: AlexandraTrifan/libm2k
+      condition: "($OS_TYPE != doxygen) && ($TRAVIS_OS_NAME = linux)"
+    draft: true
+
+  - provider: releases
+    api_key:
+      secure: buLwkQXbmIREOC1yTL1cVaZW4bbZ2lUajcKzIG64ius+uGxesru8UMVMjCEqYSMDH+NMzuY5QMMrzvRPuc5yjo/0p/t5O2YT5pikt0YJu2jTwvnXtMnhXOQCqk/nHa9t4pJza2WkqTov1BYv7xdYCYexG6dK27IMZd3zMKd3PnRzUe9RBum3mNZrYBpx1QLqaoDjZ9TLZDLLhrAoK7qU0vRTXMEnEYTtCJIYlloo/TQt9dSFEQiUdMfiRp23exDzUlYFmiut3RfvDTuZT1TaLjP8P+zT8sgc10ypxDct2+pOMUfNP/8ZWCTQ5trcfMmyxxKWPn4I2Qy3IyrFBInZwu5C5PxR+DGfsmqofqbN+rbDOhkYljbYH5hn1zmhws3WdU0sRGwbrNQ8LtJ1QEn2SXkx1PZYkjvFMv4LfkI3SxMvuqNNnHKqBa3ovTw7obyvpUb6katX28ampDxTIiXOo1QtOLTz6cxncrT2RnUD3ROK/iS8jJWh+Hnyu9YxAfb1dRWpOXRFBO6XB5++zT/rsU9Q/QyxUV8C6VWY0FvQoFJfeS62OYcxU4g+qnKOPinoLrSO1rnVjVDpudGweQ+ks9IN6/o1tJpt7Xj6zs/BPfCtKr2lZwxYREgfVuTpMXpCbSMdAxdOAxigjuEexwS2vchFu0s4luKRu8Bpq+Hob+M=
+    file:
+      - "${RELEASE_PKG_FILE_PKG}"
+      - "${RELEASE_PKG_FILE_TGZ}"
+    skip_cleanup: true
+    on:
+      all_branches: true
+      repo: AlexandraTrifan/libm2k
+      condition: "$TRAVIS_OS_NAME = osx"
+    draft: true
