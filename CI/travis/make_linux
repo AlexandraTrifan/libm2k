@@ -7,16 +7,23 @@ if [ "x${COVERITY_SCAN_PROJECT_NAME}" != "x" ] ; then exit 0; fi
 handle_default() {
 	mkdir -p build
 	cd build
-	cmake -DENABLE_PACKAGING=ON -DDEB_DETECT_DEPENDENCIES=ON ..
+
+	#create simple .deb without Python bindings
+	cmake -DENABLE_PACKAGING=ON -DDEB_DETECT_DEPENDENCIES=ON -DENABLE_PYTHON=OFF -DENABLE_CSHARP=ON -DENABLE_TOOLS=ON -DCMAKE_INSTALL_PREFIX=/usr ..
 	make && make package
 	ls
-	cd ..
+
+	#create deb for bindings
+	sudo python3 setup.py --command-packages=stdeb.command sdist_dsc
+	cd "$(find . -type d -name "debian" | head -n 1)"
+	sudo env DEB_BUILD_OPTIONS=nocheck debuild -us -uc
+	cd ../../..
 }
 
 handle_centos() {
 	mkdir -p build
 	cd build
-	cmake -DENABLE_PACKAGING=ON ..
+	cmake -DENABLE_PACKAGING=ON -DENABLE_PYTHON=OFF -DENABLE_CSHARP=ON -DENABLE_TOOLS=ON -DCMAKE_INSTALL_PREFIX=/usr ..
 	make && make package
 	cd ..
 }

@@ -29,6 +29,8 @@ handle_default() {
 
 	wget http://swdownloads.analog.com/cse/travis_builds/${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
 	sudo dpkg -i ./${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
+
+	pip3 install stdeb argparse
 }
 
 handle_doxygen() {
