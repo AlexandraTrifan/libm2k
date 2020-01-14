@@ -14,6 +14,7 @@ handle_default() {
 	ls
 
 	#create deb for bindings
+	cmake -DENABLE_PYTHON=ON ..
 	sudo python3 setup.py --command-packages=stdeb.command sdist_dsc
 	cd "$(find . -type d -name "debian" | head -n 1)"
 	sudo env DEB_BUILD_OPTIONS=nocheck debuild -us -uc
