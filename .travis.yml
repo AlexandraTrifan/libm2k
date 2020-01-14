@@ -70,7 +70,7 @@ deploy:
       - "${RELEASE_PKG_FILE_TGZ}"
     skip_cleanup: true
     on:
-      repo: analogdevicesinc/libm2k
+      repo: AlexandraTrifan/libm2k
       tags: true
       condition: "($TRAVIS_OS_NAME = linux)"
   - provider: releases
@@ -81,6 +81,6 @@ deploy:
       - "${RELEASE_PKG_FILE_TGZ}"
     skip_cleanup: true
     on:
-      repo: analogdevicesinc/libm2k
+      repo: AlexandraTrifan/libm2k
       tags: true
       condition: "$TRAVIS_OS_NAME = osx"
