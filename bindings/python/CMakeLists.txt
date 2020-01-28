@@ -30,13 +30,38 @@ set_property(SOURCE ../${PROJECT_NAME}.i PROPERTY SWIG_MODULE_NAME "libm2k")
 
 SWIG_ADD_LIBRARY(${PROJECT_NAME} TYPE MODULE LANGUAGE python OUTPUT_DIR ${CMAKE_BINARY_DIR} OUTFILE_DIR ${CMAKE_BINARY_DIR} SOURCES ../${PROJECT_NAME}.i)
 
+
+# HANDLE ANACONDA ISSUES ON OSX
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sysconfig; print(sysconfig.get_config_var('LDSHARED'))"
+                RESULT_VARIABLE PY_CONF_VAR
+                OUTPUT_VARIABLE PY_LD_SHARED
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+            message("Using the following LD_SHARED " ${PY_LD_SHARED})
+
+            IF("${PY_LD_SHARED}" MATCHES "dynamic_lookup")
+                set(PYTHON_LINK OFF)
+            ELSE()
+            SET(PYTHON_LINK ON)
+            ENDIF()
+
+            IF (NOT PYTHON_LINK)
+            IF (APPLE)
+            SET_TARGET_PROPERTIES(${SWIG_MODULE_libm2k_REAL_NAME} PROPERTIES LINK_FLAGS "-flat_namespace -undefined dynamic_lookup")
+            ENDIF()
+            ENDIF()
+
 target_include_directories(_${PROJECT_NAME} PRIVATE
 	${PYTHON_INCLUDE_DIRS}
 	${CMAKE_SOURCE_DIR}/include)
 
 target_link_libraries(_${PROJECT_NAME}
-	${PROJECT_NAME}
-	${PYTHON_LIBRARIES})
+        ${PROJECT_NAME})
+
+    IF (PYTHON_LINK)
+    target_link_libraries(_${PROJECT_NAME}
+            ${PYTHON_LIBRARIES})
+        ENDIF()
 
 set(PYTHON_EXECUTABLE_LIB_VERSION ${PYTHON_EXECUTABLE})
 if(UNIX)
@@ -66,3 +91,4 @@ add_custom_target(${PROJECT_NAME}py ALL DEPENDS _${PROJECT_NAME} WORKING_DIRECTO
 if(NOT SKIP_INSTALL_ALL)
 	install(CODE "execute_process(WORKING_DIRECTORY ${CMAKE_BINARY_DIR} COMMAND ${PYTHON_EXECUTABLE_LIB_VERSION} ${SETUP_PY} install --root=\$ENV{DESTDIR}/ --prefix=${CMAKE_INSTALL_PREFIX})")
 endif()
+
