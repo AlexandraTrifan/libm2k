@@ -19,80 +19,200 @@
  *
  */
 
-#include "private/deviceout_impl.cpp"
+#include <libm2k/utils/deviceout.hpp>
+#include <libm2k/utils/buffer.hpp>
+#include <libm2k/utils/channel.hpp>
+#include <libm2k/utils/utils.hpp>
+#include <libm2k/m2kexceptions.hpp>
+#include <libm2k/context.hpp>
+#include <algorithm>
+#include <cstring>
+
+extern "C" {
+	struct iio_context;
+	struct iio_device;
+}
 
 using namespace std;
-using namespace libm2k;
 using namespace libm2k::utils;
 using namespace libm2k::contexts;
 
-/*
- * Represents an iio_device
- */
-DeviceOut::DeviceOut(struct iio_context* context, std::string dev_name) :
-	DeviceGeneric(context, dev_name),
-	m_pimpl(std::unique_ptr<DeviceOutImpl>(new DeviceOutImpl(context, dev_name)))
-{
-}
+//class DeviceOut::DeviceOutImpl {
+//public:
 
-DeviceOut::~DeviceOut()
-{
-}
+	/*
+	 * Represents an iio_device
+	 */
+	DeviceOut::DeviceOut(struct iio_context* context, std::string dev_name) :
+		DeviceGeneric(context, dev_name)
+	{
+		m_channel_list = m_channel_list_out;
+//		m_context = context;
+//		m_dev = nullptr;
+//		m_channel_list = {};
+//		m_buffer = nullptr;
 
-void DeviceOut::initializeBuffer(unsigned int size, bool cyclic)
-{
-	m_pimpl->initializeBuffer(size, cyclic);
-}
+//		if (dev_name != "") {
+//			m_dev = iio_context_find_device(context, dev_name.c_str());
+//			if (!m_dev) {
+//				throw_exception(EXC_INVALID_PARAMETER, "Device: No such device");
+//			}
 
-void DeviceOut::push(std::vector<short> const &data, unsigned int channel,
-                     bool cyclic, bool multiplex)
-{
-    m_pimpl->push(data, channel, cyclic, multiplex);
-}
+//			__try {
+//				m_buffer = new Buffer(m_dev);
+//			} __catch (exception_type &e) {
+//				delete m_buffer;
+//				m_buffer = nullptr;
+//			}
 
-void DeviceOut::push(std::vector<unsigned short> const &data, unsigned int channel,
-		  bool cyclic, bool multiplex)
-{
-	m_pimpl->push(data, channel, cyclic, multiplex);
-}
+//			unsigned int nb_channels = iio_device_get_channels_count(m_dev);
+//			for (unsigned int i = 0; i < nb_channels; i++) {
+//				Channel *chn = nullptr;
 
-void DeviceOut::push(unsigned short *data, unsigned int channel, unsigned int nb_samples,
-		  bool cyclic, bool multiplex)
-{
-	m_pimpl->push(data, channel, nb_samples, cyclic, multiplex);
-}
+//				chn = new Channel(m_dev, i);
+//				if (!chn->isValid()) {
+//					delete chn;
+//					chn = nullptr;
+//					continue;
+//				}
 
-void DeviceOut::push(std::vector<double> const &data, unsigned int channel, bool cyclic)
-{
-	m_pimpl->push(data, channel, cyclic);
-}
+//				if (chn->isOutput()) {
+//					m_channel_list.push_back(chn);
+//				} else {
+//					delete chn;
+//					chn = nullptr;
+//					continue;
+//				}
+//			}
+//			std::sort(m_channel_list.begin(), m_channel_list.end(), [](Channel* lchn, Channel* rchn)
+//			{
+//				return Utils::compareNatural(lchn->getId(), rchn->getId());
+//			});
+//		}
+	}
 
-void DeviceOut::push(double *data, unsigned int channel, unsigned int nb_samples, bool cyclic)
-{
-	m_pimpl->push(data, channel, nb_samples, cyclic);
-}
+	DeviceOut::~DeviceOut()
+	{
+//		if (m_buffer) {
+//			delete m_buffer;
+//			m_buffer = nullptr;
+//		}
+//		for (auto ch : m_channel_list) {
+//			delete ch;
+//		}
+		m_channel_list.clear();
+	}
 
-void DeviceOut::push(short *data, unsigned int channel, unsigned int nb_samples, bool cyclic)
-{
-	m_pimpl->push(data, channel, nb_samples, cyclic);
-}
+	void DeviceOut::initializeBuffer(unsigned int size, bool cyclic)
+	{
+		if (!m_buffer) {
+			throw_exception(EXC_RUNTIME_ERROR, "Device: Cannot push; device not buffer capable");
+		}
+		m_buffer->initializeBuffer(size, cyclic);
+	}
 
-void DeviceOut::stop()
-{
-	m_pimpl->stop();
-}
+	void DeviceOut::push(std::vector<short> const &data, unsigned int channel,
+		bool cyclic, bool multiplex)
+	{
+		if (!m_buffer) {
+			throw_exception(EXC_RUNTIME_ERROR, "Device: Cannot push; device not buffer capable");
+		}
+		m_buffer->setChannels(m_channel_list);
+		m_buffer->push(data, channel, cyclic, multiplex);
+	}
 
-void DeviceOut::cancelBuffer()
-{
-	m_pimpl->cancelBuffer();
-}
 
-void DeviceOut::setKernelBuffersCount(unsigned int count)
-{
-	m_pimpl->setKernelBuffersCount(count);
-}
+	void DeviceOut::cancelBuffer()
+	{
+		if (!m_buffer) {
+			throw_exception(EXC_INVALID_PARAMETER, "Device: not buffer capable");
+		}
+		m_buffer->cancelBuffer();
+	}
 
-IIO_OBJECTS DeviceOut::getIioObjects()
-{
-	return m_pimpl->getIioObjects();
-}
+
+	void DeviceOut::push(std::vector<unsigned short> const &data, unsigned int channel,
+			  bool cyclic, bool multiplex)
+	{
+		if (!m_buffer) {
+			throw_exception(EXC_RUNTIME_ERROR, "Device: Cannot push; device not buffer capable");
+		}
+		m_buffer->setChannels(m_channel_list);
+		m_buffer->push(data, channel, cyclic, multiplex);
+	}
+
+
+	void DeviceOut::push(unsigned short *data, unsigned int channel, unsigned int nb_samples,
+			  bool cyclic, bool multiplex)
+	{
+		if (!m_buffer) {
+			throw_exception(EXC_RUNTIME_ERROR, "Device: Can not push; device not buffer capable");
+		}
+		m_buffer->setChannels(m_channel_list);
+		m_buffer->push(data, channel, nb_samples, cyclic, multiplex);
+	}
+
+	void DeviceOut::push(std::vector<double> const &data, unsigned int channel, bool cyclic)
+	{
+		if (!m_buffer) {
+			throw_exception(EXC_RUNTIME_ERROR, "Device: Cannot push; device not buffer capable");
+		}
+		m_buffer->setChannels(m_channel_list);
+		m_buffer->push(data, channel, cyclic);
+	}
+
+	void DeviceOut::push(double *data, unsigned int channel, unsigned int nb_samples, bool cyclic)
+	{
+		if (!m_buffer) {
+			throw_exception(EXC_RUNTIME_ERROR, "Device: Can not push; device not buffer capable");
+		}
+		m_buffer->setChannels(m_channel_list);
+		m_buffer->push(data, channel, nb_samples, cyclic);
+	}
+
+	void DeviceOut::push(short *data, unsigned int channel, unsigned int nb_samples, bool cyclic)
+	{
+		if (!m_buffer) {
+			throw_exception(EXC_RUNTIME_ERROR, "Device: Can not push; device not buffer capable");
+		}
+		m_buffer->setChannels(m_channel_list);
+		m_buffer->push(data, channel, nb_samples, cyclic);
+	}
+
+	void DeviceOut::stop()
+	{
+		if (m_buffer) {
+			m_buffer->stop();
+		}
+	}
+
+	void DeviceOut::setKernelBuffersCount(unsigned int count)
+	{
+		if (m_dev) {
+			if (iio_device_set_kernel_buffers_count(m_dev, count) != 0) {
+				throw_exception(EXC_RUNTIME_ERROR, "Device: Cannot set the number of kernel buffers");
+			}
+		}
+	}
+
+	struct libm2k::IIO_OBJECTS DeviceOut::getIioObjects()
+	{
+		IIO_OBJECTS iio_object = {};
+		iio_object.buffers_tx.push_back(m_buffer->getBuffer());
+
+		for (auto chn : m_channel_list) {
+			iio_object.channels_out.push_back(chn->getChannel());
+		}
+		iio_object.devices.push_back(m_dev);
+		iio_object.context = m_context;
+		return iio_object;
+	}
+
+//private:
+//	struct iio_context *m_context;
+//	struct iio_device *m_dev;
+//	std::vector<Channel*> m_channel_list;
+//	Buffer* m_buffer;
+//};
+
+

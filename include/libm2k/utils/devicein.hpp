@@ -28,8 +28,8 @@
 #include <functional>
 #include <memory>
 #include <libm2k/m2kglobal.hpp>
-#include <libm2k/utils/devicegeneric.hpp>
 #include <libm2k/enums.hpp>
+#include <libm2k/utils/devicegeneric.hpp>
 
 using namespace std;
 
@@ -44,21 +44,25 @@ public:
 	DeviceIn(struct iio_context* context, std::string dev_name = "");
 	virtual ~DeviceIn();
 
-	virtual std::vector<unsigned short> getSamples(unsigned int nb_samples);
+	virtual std::vector<unsigned short> getSamplesShort(unsigned int nb_samples);
 	virtual const unsigned short* getSamplesP(unsigned int nb_samples);
 	virtual std::vector<std::vector<double> > getSamples(unsigned int nb_samples,
 					std::function<double (int16_t, unsigned int)> process);
 	virtual const double *getSamplesInterleaved(unsigned int nb_samples,
 					std::function<double (int16_t, unsigned int)> process);
 	virtual const short *getSamplesRawInterleaved(unsigned int nb_samples);
-	void* getSamplesRawInterleavedVoid(unsigned int nb_samples);
+	virtual void* getSamplesRawInterleavedVoid(unsigned int nb_samples);
 
 	virtual void cancelBuffer();
 	virtual void flushBuffer();
 	virtual struct IIO_OBJECTS getIioObjects();
 private:
-	class DeviceInImpl;
-	std::unique_ptr<DeviceInImpl> m_pimpl;
+//	struct iio_context *m_context;
+//	struct iio_device *m_dev;
+	std::vector<Channel*> m_channel_list;
+//	Buffer* m_buffer;
+//	class DeviceInImpl;
+//	std::unique_ptr<DeviceInImpl> m_pimpl;
 };
 }
 }

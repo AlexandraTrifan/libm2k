@@ -19,14 +19,16 @@
  *
  */
 
-#include "context_impl.cpp"
-#include <libm2k/m2k.hpp>
+#include "m2k_impl.hpp"
+#include "analog/m2kanalogout_impl.hpp"
+#include "analog/m2kanalogin_impl.hpp"
+#include "analog/m2kpowersupply_impl.hpp"
+#include "m2khardwaretrigger_impl.hpp"
+#include "m2khardwaretrigger_v0.24_impl.hpp"
+#include "m2kcalibration_impl.hpp"
+#include <libm2k/analog/dmm.hpp>
 #include <libm2k/utils/channel.hpp>
-#include <libm2k/analog/m2kanalogin.hpp>
-#include <libm2k/analog/m2kanalogout.hpp>
 #include <libm2k/m2kexceptions.hpp>
-#include <libm2k/m2kcalibration.hpp>
-#include <libm2k/analog/m2kpowersupply.hpp>
 #include <libm2k/digital/m2kdigital.hpp>
 #include <libm2k/utils/utils.hpp>
 #include <libm2k/utils/devicegeneric.hpp>
@@ -41,9 +43,9 @@ using namespace libm2k::analog;
 using namespace libm2k::digital;
 using namespace libm2k::utils;
 
-class M2k::M2kImpl : public ContextImpl {
-public:
-	M2kImpl(std::string uri, iio_context* ctx, std::string name, bool sync) :
+//class M2k::M2kImpl : public ContextImpl {
+//public:
+	M2kImpl::M2kImpl(std::string uri, iio_context* ctx, std::string name, bool sync) :
 		ContextImpl(uri, ctx, name, sync),
 		m_sync(sync),
 		m_deinit(false)
@@ -65,7 +67,15 @@ public:
 		m_instancesPowerSupply.clear();
 
 		m_firmware_version = getFirmwareVersion();
-		m_trigger = new M2kHardwareTrigger(ctx, m_firmware_version);
+
+		int diff = Utils::compareVersions(m_firmware_version, "v0.24");
+		if (diff < 0) {	//m_firmware_version < 0.24
+			m_trigger = new M2kHardwareTriggerImpl(ctx);
+			//				m_pimpl = std::unique_ptr<M2kHardwareTriggerImpl>(new M2kHardwareTriggerImpl(ctx));
+		} else {
+			m_trigger = new M2kHardwareTriggerV024Impl(ctx);
+			//				m_pimpl = std::unique_ptr<M2kHardwareTriggerV024Impl>(new M2kHardwareTriggerV024Impl(ctx));
+		}
 
 		if (!m_trigger) {
 			throw_exception(EXC_INVALID_PARAMETER, "Can't instantiate M2K board; M2K trigger is invalid.");
@@ -75,10 +85,10 @@ public:
 		scanAllAnalogOut();
 		scanAllPowerSupply();
 		scanAllDigital();
-		m_calibration = new M2kCalibration(ctx, getAnalogIn(), getAnalogOut());
+		m_calibration = new M2kCalibrationImpl(ctx, getAnalogIn(), getAnalogOut());
 	}
 
-	~M2kImpl()
+	M2kImpl::~M2kImpl()
 	{
 		if (m_deinit) {
 			std::shared_ptr<DeviceGeneric> m_m2k_fabric = make_shared<DeviceGeneric>(m_context, "m2k-fabric");
@@ -133,13 +143,15 @@ public:
 		m_instancesPowerSupply.clear();
 	}
 
-	void deinitialize()
+	void M2kImpl::deinitialize()
 	{
+		std::cout << "\nblablalblabladeinit m2k\n";
 		m_deinit = true;
 	}
 
-	void init()
+	void M2kImpl::init()
 	{
+		std::cout << "init m2k\n";
 		for (auto ain : m_instancesAnalogIn) {
 			ain->init();
 		}
@@ -159,57 +171,57 @@ public:
 
 	}
 
-	void setTimeout(unsigned int timeout)
+	void M2kImpl::setTimeout(unsigned int timeout)
 	{
 		iio_context_set_timeout(m_context, timeout);
 	}
 
-	void scanAllAnalogIn()
+	void M2kImpl::scanAllAnalogIn()
 	{
-		M2kAnalogIn* aIn = new libm2k::analog::M2kAnalogIn(m_context, "m2k-adc", m_sync, m_trigger);
+		M2kAnalogIn* aIn = new libm2k::analog::M2kAnalogInImpl(m_context, "m2k-adc", m_sync, m_trigger);
 		m_instancesAnalogIn.push_back(aIn);
 	}
 
-	void scanAllAnalogOut()
+	void M2kImpl::scanAllAnalogOut()
 	{
 		std::vector<std::string> devs = {"m2k-dac-a", "m2k-dac-b"};
-		M2kAnalogOut* aOut = new libm2k::analog::M2kAnalogOut(m_context, devs, m_sync);
+		M2kAnalogOut* aOut = new libm2k::analog::M2kAnalogOutImpl(m_context, devs, m_sync);
 		m_instancesAnalogOut.push_back(aOut);
 	}
 
-	void scanAllPowerSupply()
+	void M2kImpl::scanAllPowerSupply()
 	{
-		libm2k::analog::M2kPowerSupply* pSupply = new libm2k::analog::M2kPowerSupply(m_context, "ad5627", "ad9963", m_sync);
+		libm2k::analog::M2kPowerSupply* pSupply = new libm2k::analog::M2kPowerSupplyImpl(m_context, "ad5627", "ad9963", m_sync);
 		m_instancesPowerSupply.push_back(pSupply);
 	}
 
-	void scanAllDigital()
+	void M2kImpl::scanAllDigital()
 	{
 		libm2k::digital::M2kDigital* logic = new libm2k::digital::M2kDigital(m_context, "m2k-logic-analyzer", m_sync, m_trigger);
 		m_instancesDigital.push_back(logic);
 	}
 
-	void calibrate()
+	void M2kImpl::calibrate()
 	{
 
 	}
 
-	bool resetCalibration()
+	bool M2kImpl::resetCalibration()
 	{
 		return m_calibration->resetCalibration();
 	}
 
-	bool calibrateADC()
+	bool M2kImpl::calibrateADC()
 	{
 		return m_calibration->calibrateADC();
 	}
 
-	bool calibrateDAC()
+	bool M2kImpl::calibrateDAC()
 	{
 		return m_calibration->calibrateDAC();
 	}
 
-	double getAdcCalibrationGain(unsigned int chn)
+	double M2kImpl::getAdcCalibrationGain(unsigned int chn)
 	{
 		if (chn >= getAnalogIn()->getNbChannels()) {
 			throw_exception(EXC_OUT_OF_RANGE, "No such ADC channel");
@@ -221,7 +233,7 @@ public:
 		}
 	}
 
-	int getAdcCalibrationOffset(unsigned int chn)
+	int M2kImpl::getAdcCalibrationOffset(unsigned int chn)
 	{
 		if (chn >= getAnalogIn()->getNbChannels()) {
 			throw_exception(EXC_OUT_OF_RANGE, "No such ADC channel");
@@ -233,27 +245,27 @@ public:
 		}
 	}
 
-	double getDacACalibrationGain()
+	double M2kImpl::getDacACalibrationGain()
 	{
 		return m_calibration->dacAvlsb();
 	}
 
-	double getDacBCalibrationGain()
+	double M2kImpl::getDacBCalibrationGain()
 	{
 		return m_calibration->dacBvlsb();
 	}
 
-	int getDacACalibrationOffset()
+	int M2kImpl::getDacACalibrationOffset()
 	{
 		return m_calibration->dacAoffset();
 	}
 
-	int getDacBCalibrationOffset()
+	int M2kImpl::getDacBCalibrationOffset()
 	{
 		return m_calibration->dacBoffset();
 	}
 
-	M2kAnalogIn* getAnalogIn()
+	M2kAnalogIn* M2kImpl::getAnalogIn()
 	{
 		auto aIn = dynamic_cast<libm2k::analog::M2kAnalogIn*>(
 					m_instancesAnalogIn.at(0));
@@ -264,7 +276,7 @@ public:
 		}
 	}
 
-	M2kAnalogIn* getAnalogIn(string dev_name)
+	M2kAnalogIn* M2kImpl::getAnalogIn(string dev_name)
 	{
 		for (M2kAnalogIn* d : m_instancesAnalogIn) {
 			if (d->getName() == dev_name) {
@@ -278,7 +290,7 @@ public:
 		return nullptr;
 	}
 
-	M2kPowerSupply* getPowerSupply()
+	M2kPowerSupply* M2kImpl::getPowerSupply()
 	{
 		M2kPowerSupply* pSupply = dynamic_cast<M2kPowerSupply*>(m_instancesPowerSupply.at(0));
 		if (!pSupply) {
@@ -287,7 +299,7 @@ public:
 		return pSupply;
 	}
 
-	M2kDigital* getDigital()
+	M2kDigital* M2kImpl::getDigital()
 	{
 		M2kDigital* logic = dynamic_cast<M2kDigital*>(m_instancesDigital.at(0));
 		if (!logic) {
@@ -296,7 +308,7 @@ public:
 		return logic;
 	}
 
-	M2kAnalogOut* getAnalogOut()
+	M2kAnalogOut* M2kImpl::getAnalogOut()
 	{
 		if (m_instancesAnalogOut.size() > 0) {
 			return m_instancesAnalogOut.at(0);
@@ -304,17 +316,17 @@ public:
 		return nullptr;
 	}
 
-	std::vector<M2kAnalogIn*> getAllAnalogIn()
+	std::vector<M2kAnalogIn*> M2kImpl::getAllAnalogIn()
 	{
 		return m_instancesAnalogIn;
 	}
 
-	std::vector<M2kAnalogOut*> getAllAnalogOut()
+	std::vector<M2kAnalogOut*> M2kImpl::getAllAnalogOut()
 	{
 		return m_instancesAnalogOut;
 	}
 
-	void initialize()
+	void M2kImpl::initialize()
 	{
 		std::string hw_rev = Utils::getHardwareRevision(m_context);
 
@@ -342,7 +354,7 @@ public:
 		m_m2k_fabric->setBoolValue(false, "clk_powerdown");
 	}
 
-	void blinkLed(const double duration = 4, bool blocking = false)
+	void M2kImpl::blinkLed(const double duration, bool blocking)
 	{
 		std::shared_ptr<DeviceGeneric> m_m2k_fabric = make_shared<DeviceGeneric>(m_context, "m2k-fabric");
 		if (m_m2k_fabric->getChannel("voltage4", true)->hasAttribute("done_led_overwrite_powerdown")) {
@@ -370,7 +382,7 @@ public:
 		}
 	}
 
-	void setLed(bool on)
+	void M2kImpl::setLed(bool on)
 	{
 		std::shared_ptr<DeviceGeneric> m_m2k_fabric = make_shared<DeviceGeneric>(m_context, "m2k-fabric");
 		if (m_m2k_fabric->getChannel("voltage4", true)->hasAttribute("done_led_overwrite_powerdown")) {
@@ -378,7 +390,7 @@ public:
 		}
 	}
 
-	bool getLed()
+	bool M2kImpl::getLed()
 	{
 		bool on = false;
 		std::shared_ptr<DeviceGeneric> m_m2k_fabric = make_shared<DeviceGeneric>(m_context, "m2k-fabric");
@@ -388,14 +400,5 @@ public:
 		return on;
 	}
 
-private:
-	M2kCalibration* m_calibration;
-	libm2k::M2kHardwareTrigger *m_trigger;
-	std::vector<analog::M2kAnalogOut*> m_instancesAnalogOut;
-	std::vector<analog::M2kAnalogIn*> m_instancesAnalogIn;
-	std::vector<analog::M2kPowerSupply*> m_instancesPowerSupply;
-	std::vector<digital::M2kDigital*> m_instancesDigital;
-	bool m_sync;
-	bool m_deinit;
-	std::string m_firmware_version;
-};
+
+//};

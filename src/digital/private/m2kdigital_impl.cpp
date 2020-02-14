@@ -251,7 +251,7 @@ public:
 			 * be a multiple of 8 bytes (4x 16-bit samples). Round up to the
 			 * nearest multiple.*/
 			nb_samples = ((nb_samples + 3) / 4) * 4;
-			return m_dev_read->getSamples(nb_samples);
+			return m_dev_read->getSamplesShort(nb_samples);
 
 		} __catch (exception_type &e) {
 			throw_exception(EXC_INVALID_PARAMETER, "M2K Digital: " + string(e.what()));

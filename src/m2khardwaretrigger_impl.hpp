@@ -19,15 +19,22 @@
  *
  */
 
-#ifndef M2KHARDWARETRIGGER_HPP
-#define M2KHARDWARETRIGGER_HPP
+#ifndef M2KHARDWARETRIGGER_IMPL_HPP
+#define M2KHARDWARETRIGGER_IMPL_HPP
 
+#include <libm2k/m2khardwaretrigger.hpp>
 #include <libm2k/enums.hpp>
 #include <libm2k/digital/enums.hpp>
 #include <libm2k/m2kglobal.hpp>
 #include <libm2k/m2k.hpp>
+#include "libm2k/utils/channel.hpp"
+#include "libm2k/utils/devicein.hpp"
 #include <vector>
 #include <memory>
+
+using namespace libm2k::utils;
+using namespace libm2k::digital;
+
 
 namespace libm2k {
 
@@ -38,31 +45,31 @@ namespace libm2k {
  * @class M2kHardwareTrigger
  * @brief Controls the hardware trigger for ADALM2000
  */
-class LIBM2K_API M2kHardwareTrigger
+class M2kHardwareTriggerImpl : public M2kHardwareTrigger, public DeviceIn
 {
 public:
-//	/**
-//	 * @private
-//	 */
-//	M2kHardwareTrigger(struct iio_context *ctx, const std::string& fw_version);
+	/**
+	 * @private
+	 */
+	M2kHardwareTriggerImpl(struct iio_context *ctx, bool init = true);
 
 	/**
 	 * @private
 	 */
-	virtual ~M2kHardwareTrigger() {}
+	virtual ~M2kHardwareTriggerImpl();
 
 
 	/**
 	 * @private
 	 */
-	virtual void init() = 0;
+	void init();
 
 	/**
 	 * @brief Get the raw analog trigger level for one channel
 	 * @param chnIdx the required channel
 	 * @return the raw analog trigger level
 	 */
-	virtual int getAnalogLevelRaw(unsigned int chnIdx) = 0;
+	int getAnalogLevelRaw(unsigned int chnIdx);
 
 
 	/**
@@ -70,7 +77,7 @@ public:
 	 * @param chnIdx the required channel
 	 * @param level the raw analog trigger level
 	 */
-	virtual void setAnalogLevelRaw(unsigned int chnIdx, int level) = 0;
+	void setAnalogLevelRaw(unsigned int chnIdx, int level);
 
 
 	/**
@@ -78,7 +85,7 @@ public:
 	 * @param chnIdx the required channel
 	 * @param v_level the analog trigger level in volts
 	 */
-	virtual void setAnalogLevel(unsigned int chnIdx, double v_level) = 0;
+	void setAnalogLevel(unsigned int chnIdx, double v_level);
 
 
 	/**
@@ -86,7 +93,7 @@ public:
 	 * @param chnIdx the required channel
 	 * @return the analog trigger level in volts
 	 */
-	virtual double getAnalogLevel(unsigned int chnIdx) = 0;
+	double getAnalogLevel(unsigned int chnIdx);
 
 
 	/**
@@ -94,7 +101,7 @@ public:
 	 * @param chnIdx the required channel
 	 * @return the value of the hysteresis in Volts
 	 */
-	virtual double getAnalogHysteresis(unsigned int chnIdx) = 0;
+	double getAnalogHysteresis(unsigned int chnIdx);
 
 
 	/**
@@ -102,7 +109,7 @@ public:
 	 * @param chnIdx the required channel
 	 * @param hysteresis in Volts
 	 */
-	virtual void setAnalogHysteresis(unsigned int chnIdx, double hysteresis) = 0;
+	void setAnalogHysteresis(unsigned int chnIdx, double hysteresis);
 
 
 	/**
@@ -110,7 +117,7 @@ public:
 	 * @param chnIdx the required channel
 	 * @return the trigger condition
 	 */
-	virtual M2K_TRIGGER_CONDITION_ANALOG getAnalogCondition(unsigned int chnIdx) = 0;
+	M2K_TRIGGER_CONDITION_ANALOG getAnalogCondition(unsigned int chnIdx);
 
 
 	/**
@@ -118,7 +125,7 @@ public:
 	 * @param chnIdx the required channel
 	 * @param cond the specific trigger condition
 	 */
-	virtual void setAnalogCondition(unsigned int chnIdx, M2K_TRIGGER_CONDITION_ANALOG cond) = 0;
+	void setAnalogCondition(unsigned int chnIdx, M2K_TRIGGER_CONDITION_ANALOG cond);
 
 
 	/**
@@ -126,7 +133,7 @@ public:
 	 * @param chnIdx the required channel
 	 * @return the trigger condition
 	 */
-	virtual M2K_TRIGGER_CONDITION_DIGITAL getDigitalCondition(unsigned int chnIdx) = 0;
+	M2K_TRIGGER_CONDITION_DIGITAL getDigitalCondition(unsigned int chnIdx);
 
 
 	/**
@@ -134,7 +141,7 @@ public:
 	 * @param chnIdx the required channel
 	 * @param cond the specific trigger condition
 	 */
-	virtual void setDigitalCondition(unsigned int chnIdx, M2K_TRIGGER_CONDITION_DIGITAL cond) = 0;
+	void setDigitalCondition(unsigned int chnIdx, M2K_TRIGGER_CONDITION_DIGITAL cond);
 
 
 
@@ -143,7 +150,7 @@ public:
 	 * @param chnIdx the required channel
 	 * @return the analog trigger mode
 	 */
-	virtual M2K_TRIGGER_MODE getAnalogMode(unsigned int chnIdx) = 0;
+	M2K_TRIGGER_MODE getAnalogMode(unsigned int chnIdx);
 
 
 	/**
@@ -151,49 +158,49 @@ public:
 	 * @param chnIdx the required channel
 	 * @param mode the analog trigger mode
 	 */
-	virtual void setAnalogMode(unsigned int chnIdx, M2K_TRIGGER_MODE mode) = 0;
+	void setAnalogMode(unsigned int chnIdx, M2K_TRIGGER_MODE mode);
 
 
 	/**
 	 * @brief Get the mode for the digital trigger
 	 * @return the digital trigger mode (DIO_OR/DIO_AND)
 	 */
-	virtual libm2k::digital::DIO_TRIGGER_MODE getDigitalMode() = 0;
+	libm2k::digital::DIO_TRIGGER_MODE getDigitalMode();
 
 
 	/**
 	 * @brief Set the mode for the digital trigger
 	 * @param mode the digital trigger mode (DIO_OR/DIO_AND)
 	 */
-	virtual void setDigitalMode(libm2k::digital::DIO_TRIGGER_MODE mode) = 0;
+	void setDigitalMode(libm2k::digital::DIO_TRIGGER_MODE mode);
 
 
 	/**
 	 * @brief Get the source of the analog trigger
 	 * @return analog trigger source (channel1, channel2, etc)
 	 */
-	virtual M2K_TRIGGER_SOURCE_ANALOG getAnalogSource() = 0;
+	M2K_TRIGGER_SOURCE_ANALOG getAnalogSource();
 
 
 	/**
 	 * @brief Set the source of the analog trigger
 	 * @param src analog trigger source (channel1, channel2, etc)
 	 */
-	virtual void setAnalogSource(M2K_TRIGGER_SOURCE_ANALOG src) = 0;
+	void setAnalogSource(M2K_TRIGGER_SOURCE_ANALOG src);
 
 
 	/**
 	 * @brief Get the channel source of the analog trigger
 	 * @return analog trigger channel source (channel1, channel2)
 	 */
-	virtual int getAnalogSourceChannel() = 0;
+	int getAnalogSourceChannel();
 
 
 	/**
 	 * @brief Set the channel source of the analog trigger
 	 * @param chnIdx the index of the channel that should be used
 	 */
-	virtual void setAnalogSourceChannel(unsigned int chnIdx) = 0;
+	void setAnalogSourceChannel(unsigned int chnIdx);
 
 
 	/**
@@ -210,7 +217,7 @@ public:
 	 * @note the delay can have positive values
 	 * TBD
 	 */
-	virtual int getAnalogDelay() const = 0;
+	int getAnalogDelay() const;
 
 
 	/**
@@ -227,7 +234,7 @@ public:
 	 * @note the delay can have positive values
 	 * TBD
 	 */
-	virtual void setAnalogDelay(int delay) = 0;
+	void setAnalogDelay(int delay);
 
 
 	/**
@@ -244,7 +251,7 @@ public:
 	 * @note the delay can have positive values
 	 * TBD
 	 */
-	virtual int getDigitalDelay() const = 0;
+	int getDigitalDelay() const;
 
 
 	/**
@@ -261,53 +268,59 @@ public:
 	 * @note the delay can have positive values
 	 * TBD
 	 */
-	virtual void setDigitalDelay(int delay) = 0;
+	void setDigitalDelay(int delay);
 
 
 	/**
 	* @private
 	*/
-	virtual struct SETTINGS *getCurrentHwSettings() = 0;
+	struct SETTINGS *getCurrentHwSettings();
 
 
 	/**
 	* @private
 	*/
-	virtual void setHwTriggerSettings(struct SETTINGS *settings) = 0;
+	void setHwTriggerSettings(struct SETTINGS *settings);
 
 
 	/**
 	 * @brief Set the streaming flag for the analog part
 	 * @param enable the streaming
 	 */
-	virtual void setAnalogStreamingFlag(bool enable) = 0;
+	void setAnalogStreamingFlag(bool enable);
 
 
 	/**
 	 * @brief Get the streaming flag for the analog part
 	 * @return whether the streaming is enabled (true/false)
 	 */
-	virtual bool getAnalogStreamingFlag() = 0;
+	bool getAnalogStreamingFlag();
 
 
 	/**
 	 * @brief Set the streaming flag for the digital part
 	 * @param enable the streaming
 	 */
-	virtual void setDigitalStreamingFlag(bool enable) = 0;
+	void setDigitalStreamingFlag(bool enable);
 
 
 	/**
 	 * @brief Get the streaming flag for the digital part
 	 * @return whether the streaming is enabled (true/false)
 	 */
-	virtual bool getDigitalStreamingFlag() = 0;
+	bool getDigitalStreamingFlag();
 
 
 	/**
 	* @private
 	*/
-	virtual void setCalibParameters(unsigned int chnIdx, double scaling, double vert_offset) = 0;
+	static std::vector<std::string> getAvailableDigitalConditions();
+
+
+	/**
+	* @private
+	*/
+	void setCalibParameters(unsigned int chnIdx, double scaling, double vert_offset);
 
 
 	/**
@@ -315,7 +328,7 @@ public:
 	 * @param chnIdx : integer - the index of the required channel
 	 * @return M2K_TRIGGER_CONDITION_DIGITAL
 	 */
-	virtual M2K_TRIGGER_CONDITION_DIGITAL getAnalogExternalCondition(unsigned int chnIdx) = 0;
+	M2K_TRIGGER_CONDITION_DIGITAL getAnalogExternalCondition(unsigned int chnIdx);
 
 
 	/**
@@ -323,21 +336,21 @@ public:
 	 * @param chnIdx : integer - the index of the required channel
 	 * @param cond : M2K_TRIGGER_CONDITION_DIGITAL
 	 */
-	virtual void setAnalogExternalCondition(unsigned int chnIdx, M2K_TRIGGER_CONDITION_DIGITAL cond) = 0;
+	void setAnalogExternalCondition(unsigned int chnIdx, M2K_TRIGGER_CONDITION_DIGITAL cond);
 
 
 	/**
 	 * @brief getDigitalExternalCondition
 	 * @return M2K_TRIGGER_CONDITION_DIGITAL
 	 */
-	virtual M2K_TRIGGER_CONDITION_DIGITAL getDigitalExternalCondition() = 0;
+	M2K_TRIGGER_CONDITION_DIGITAL getDigitalExternalCondition();
 
 
 	/**
 	 * @brief setDigitalExternalCondition
 	 * @param cond : M2K_TRIGGER_CONDITION_DIGITAL
 	 */
-	virtual void setDigitalExternalCondition(M2K_TRIGGER_CONDITION_DIGITAL cond) = 0;
+	void setDigitalExternalCondition(M2K_TRIGGER_CONDITION_DIGITAL cond);
 
 
 	/**
@@ -350,11 +363,7 @@ public:
 	 *	SELECT_NONE - no trigger event is forwarded;
 	 * @note Only available from firmware v0.24.
 	 */
-	virtual void setAnalogExternalOutSelect(M2K_TRIGGER_OUT_SELECT output_select) {
-		throw std::runtime_error("M2kHardwareTrigger: "
-					 "the analog external output is not configurable on "
-					 "the current board; Check the firmware version.");
-	};
+//	virtual void setAnalogExternalOutSelect(M2K_TRIGGER_OUT_SELECT output_select);
 
 
 	/**
@@ -363,25 +372,25 @@ public:
 	 *	SELECT_DIGITAL_IN, SELECT_ANALOG_IN}
 	 * @note Only available from firmware v0.24.
 	 */
-	virtual M2K_TRIGGER_OUT_SELECT getAnalogExternalOutSelect() = 0;
+	M2K_TRIGGER_OUT_SELECT getAnalogExternalOutSelect();
 
 
 	/**
 	 * @private
 	 */
-	virtual bool hasExternalTriggerIn() const = 0;
+	bool hasExternalTriggerIn() const;
 
 
 	/**
 	 * @private
 	 */
-	virtual bool hasExternalTriggerOut() const = 0;
+	bool hasExternalTriggerOut() const;
 
 
 	/**
 	 * @private
 	 */
-	virtual bool hasCrossInstrumentTrigger() const = 0;
+	bool hasCrossInstrumentTrigger() const;
 
 
 	/**
@@ -392,7 +401,7 @@ public:
 	 *	SRC_NONE - trigger events on the DigitalIn are conditioned by the internal digital trigger structure;
 	 * @note Only available from firmware v0.24.
 	 */
-	virtual void setDigitalSource(M2K_TRIGGER_SOURCE_DIGITAL external_src) = 0;
+	void setDigitalSource(M2K_TRIGGER_SOURCE_DIGITAL external_src);
 
 
 	/**
@@ -400,13 +409,35 @@ public:
 	 * @return M2K_TRIGGER_SOURCE_DIGITAL : {SRC_TRIGGER_IN, SRC_ANALOG_IN, SRC_NONE}
 	 * @note Only available from firmware v0.24.
 	 */
-	virtual M2K_TRIGGER_SOURCE_DIGITAL getDigitalSource() const = 0;
+	M2K_TRIGGER_SOURCE_DIGITAL getDigitalSource() const;
 
-//private:
-//	class M2kHardwareTriggerImpl;
-//	class M2kHardwareTriggerV024Impl;
-//	std::unique_ptr<M2kHardwareTriggerImpl> m_pimpl;
+	M2K_TRIGGER_CONDITION_DIGITAL getDigitalCondition(DIO_CHANNEL chn);
+	void setDigitalCondition(DIO_CHANNEL chn, M2K_TRIGGER_CONDITION_DIGITAL cond);
+protected:
+	struct iio_device *m_trigger_device;
+	std::vector<Channel *> m_analog_channels;
+	std::vector<Channel *> m_digital_channels;
+	std::vector<Channel *> m_logic_channels;
+	std::shared_ptr<DeviceIn> m_digital_trigger_device;
+
+	Channel *m_delay_trigger;
+	bool m_streaming_flag_digital;
+	bool m_streaming_flag_analog;
+
+	unsigned int m_num_channels;
+	std::vector<bool> m_analog_enabled;
+	std::vector<bool> m_digital_enabled;
+	std::vector<double> m_scaling, m_offset;
+
+	double m_firmware_version;
+
+	static std::vector<std::string> m_trigger_analog_cond;
+	static std::vector<std::string> m_trigger_digital_cond;
+	static std::vector<std::string> m_trigger_mode;
+	static std::vector<std::string> m_trigger_source;
+	static std::vector<std::string> m_trigger_logic_mode;
+
 };
 }
 
-#endif //M2KHARDWARETRIGGER_HPP
+#endif //M2KHARDWARETRIGGER_IMPL_HPP

@@ -19,12 +19,13 @@
  *
  */
 
+#include "context_impl.hpp"
+#include "analog/dmm_impl.hpp"
 #include <libm2k/m2kexceptions.hpp>
-#include <libm2k/context.hpp>
 #include <libm2k/analog/genericanalogin.hpp>
 #include <libm2k/analog/genericanalogout.hpp>
 #include <libm2k/analog/powersupply.hpp>
-#include <libm2k/analog/dmm.hpp>
+//#include <libm2k/analog/dmm.hpp>
 #include <libm2k/utils/utils.hpp>
 #include <libm2k/m2k.hpp>
 #include <libm2k/lidar.hpp>
@@ -37,114 +38,116 @@ using namespace libm2k::digital;
 using namespace libm2k::contexts;
 using namespace libm2k::utils;
 
-class Context::ContextImpl {
-public:
-	ContextImpl(std::string uri, struct iio_context *ctx, std::string name, bool sync)
+//class Context::ContextImpl {
+//public:
+	ContextImpl::ContextImpl(std::string uri, struct iio_context *ctx, std::string name, bool sync)
 	{
 		m_context = ctx;
 		m_uri = uri;
 		m_sync = sync;
 
 		/* Initialize the AnalogIn list */
-		auto aIn_lst = scanAllAnalogIn();
-		for (auto aIn : aIn_lst) {
-			m_instancesAnalogIn.push_back(new GenericAnalogIn(ctx, aIn));
-		}
+//		auto aIn_lst = scanAllAnalogIn();
+//		for (auto aIn : aIn_lst) {
+//			m_instancesAnalogIn.push_back(new GenericAnalogIn(ctx, aIn));
+//		}
 
-		/* Initialize the AnalogIn list */
-		auto aOut_lst = scanAllAnalogOut();
-		for (auto aOut : aOut_lst) {
-			m_instancesAnalogOut.push_back(new GenericAnalogOut(ctx, aOut));
-		}
+//		/* Initialize the AnalogIn list */
+//		auto aOut_lst = scanAllAnalogOut();
+//		for (auto aOut : aOut_lst) {
+//			m_instancesAnalogOut.push_back(new GenericAnalogOut(ctx, aOut));
+//		}
 
 		/* Initialize the DMM list */
 		scanAllDMM();
 
 
 		/* Initialize the power supply list */
-		scanAllPowerSupply();
+//		scanAllPowerSupply();
 
 		initializeContextAttributes();
 	}
 
-	virtual ~ContextImpl()
+	ContextImpl::~ContextImpl()
 	{
 		for (auto d : m_instancesDMM) {
 			delete d;
 		}
-		for (auto ain : m_instancesAnalogIn) {
-			delete ain;
-		}
-		for (auto aout : m_instancesAnalogOut) {
-			delete aout;
-		}
+//		for (auto ain : m_instancesAnalogIn) {
+//			delete ain;
+//		}
+//		for (auto aout : m_instancesAnalogOut) {
+//			delete aout;
+//		}
 		m_instancesDMM.clear();
-		m_instancesAnalogIn.clear();
-		m_instancesAnalogOut.clear();
+//		m_instancesAnalogIn.clear();
+//		m_instancesAnalogOut.clear();
 
 		if (m_context) {
 			iio_context_destroy(m_context);
 		}
 	}
 
-	virtual void init()
+	void ContextImpl::init()
 	{
+		printf("init generic\n");
 	}
 
-	virtual void deinitialize()
+	void ContextImpl::deinitialize()
 	{
-
+		printf("deininit generic\n");
 	}
 
-	unsigned int getAnalogInCount()
-	{
-		return m_instancesAnalogIn.size();
-	}
 
-	GenericAnalogIn* getAnalogIn(unsigned int index)
-	{
-		if (index < m_instancesAnalogIn.size()) {
-			return m_instancesAnalogIn.at(index);
-		} else {
-			return nullptr;
-		}
-	}
+//	unsigned int ContextImpl::getAnalogInCount()
+//	{
+//		return m_instancesAnalogIn.size();
+//	}
 
-	GenericAnalogIn* getAnalogIn(std::string dev_name)
-	{
-		for (GenericAnalogIn* d : m_instancesAnalogIn) {
-			if (d->getDeviceName() == dev_name) {
-				return d;
-			}
-		}
-		return nullptr;
-	}
+//	GenericAnalogIn* ContextImpl::getAnalogIn(unsigned int index)
+//	{
+//		if (index < m_instancesAnalogIn.size()) {
+//			return m_instancesAnalogIn.at(index);
+//		} else {
+//			return nullptr;
+//		}
+//	}
 
-	unsigned int getAnalogOutCount()
-	{
-		return m_instancesAnalogOut.size();
-	}
+//	GenericAnalogIn* ContextImpl::getAnalogIn(std::string dev_name)
+//	{
+//		for (GenericAnalogIn* d : m_instancesAnalogIn) {
+//			if (d->getDeviceName() == dev_name) {
+//				return d;
+//			}
+//		}
+//		return nullptr;
+//	}
 
-	GenericAnalogOut* getAnalogOut(unsigned int index)
-	{
-		if (index < m_instancesAnalogOut.size()) {
-			return m_instancesAnalogOut.at(index);
-		} else {
-			return nullptr;
-		}
-	}
+//	unsigned int ContextImpl::getAnalogOutCount()
+//	{
+//		return m_instancesAnalogOut.size();
+//	}
 
-	GenericAnalogOut* getAnalogOut(std::string dev_name)
-	{
-		for (GenericAnalogOut* d : m_instancesAnalogOut) {
-			if (d->getName() == dev_name) {
-				return d;
-			}
-		}
-		return nullptr;
-	}
+//	GenericAnalogOut* ContextImpl::getAnalogOut(unsigned int index)
+//	{
+//		if (index < m_instancesAnalogOut.size()) {
+//			return m_instancesAnalogOut.at(index);
+//		} else {
+//			return nullptr;
+//		}
+//	}
 
-	static bool iioDevHasAttribute(iio_device* dev, std::string const& attr)
+//	GenericAnalogOut* ContextImpl::getAnalogOut(std::string dev_name)
+//	{
+//		for (GenericAnalogOut* d : m_instancesAnalogOut) {
+//			if (d->getName() == dev_name) {
+//				return d;
+//			}
+//		}
+//		return nullptr;
+//	}
+
+	bool ContextImpl::iioDevHasAttribute(iio_device* dev, std::string const& attr)
 	{
 		unsigned int nb_attr = iio_device_get_attrs_count(dev);
 		const char* attr_name;
@@ -158,13 +161,13 @@ public:
 		return false;
 	}
 
-	static bool iioDevBufferHasAttribute(iio_device *dev, const std::string &attr)
+	bool ContextImpl::iioDevBufferHasAttribute(iio_device *dev, const std::string &attr)
 	{
 		const char *attribute = iio_device_find_buffer_attr(dev, attr.c_str());
 		return attribute != nullptr;
 	}
 
-	static bool iioChannelHasAttribute(iio_channel* chn, std::string const& attr)
+	bool ContextImpl::iioChannelHasAttribute(iio_channel* chn, std::string const& attr)
 	{
 		unsigned int nb_attr = iio_channel_get_attrs_count(chn);
 		const char* attr_name;
@@ -178,7 +181,7 @@ public:
 		return false;
 	}
 
-	DEVICE_DIRECTION getIioDeviceDirection(std::string dev_name)
+	DEVICE_DIRECTION ContextImpl::getIioDeviceDirection(std::string dev_name)
 	{
 		DEVICE_DIRECTION dir = NO_DIRECTION;
 		auto dev = iio_context_find_device(m_context, dev_name.c_str());
@@ -207,7 +210,7 @@ public:
 	}
 
 
-	DEVICE_TYPE getIioDeviceType(std::string dev_name)
+	DEVICE_TYPE ContextImpl::getIioDeviceType(std::string dev_name)
 	{
 		auto dev = iio_context_find_device(m_context, dev_name.c_str());
 		if (!dev) {
@@ -227,7 +230,7 @@ public:
 		}
 	}
 
-	std::vector<std::pair<std::string, std::string>> getIioDevByChannelAttrs(std::vector<std::string> attr_list)
+	std::vector<std::pair<std::string, std::string>> ContextImpl::getIioDevByChannelAttrs(std::vector<std::string> attr_list)
 	{
 		iio_device* dev = nullptr;
 		iio_channel* chn = nullptr;
@@ -277,7 +280,7 @@ public:
 		return dev_chn_list;
 	}
 
-	bool isIioDeviceBufferCapable(std::string dev_name)
+	bool ContextImpl::isIioDeviceBufferCapable(std::string dev_name)
 	{
 		unsigned int dev_count = iio_device_get_buffer_attrs_count(
 					iio_context_find_device(m_context, dev_name.c_str()));
@@ -288,54 +291,54 @@ public:
 		}
 	}
 
-	std::unordered_set<std::string> getAllDevices()
+	std::unordered_set<std::string> ContextImpl::getAllDevices()
 	{
 
 		return Utils::getAllDevices(m_context);
 	}
 
-	std::vector<std::string> scanAllAnalogIn()
-	{
-		auto dev_list = getAllDevices();
-		std::vector<std::string> aIn_lst = {};
-		std::exception e;
-		for (auto dev : dev_list) {
-			if (isIioDeviceBufferCapable(dev) &&
-					(getIioDeviceType(dev) == ANALOG_DEV) &&
-					getIioDeviceDirection(dev) == INPUT) {
-				aIn_lst.push_back(dev);
-			}
-		}
-		return aIn_lst;
-	}
+//	std::vector<std::string> ContextImpl::scanAllAnalogIn()
+//	{
+//		auto dev_list = getAllDevices();
+//		std::vector<std::string> aIn_lst = {};
+//		std::exception e;
+//		for (auto dev : dev_list) {
+//			if (isIioDeviceBufferCapable(dev) &&
+//					(getIioDeviceType(dev) == ANALOG_DEV) &&
+//					getIioDeviceDirection(dev) == INPUT) {
+//				aIn_lst.push_back(dev);
+//			}
+//		}
+//		return aIn_lst;
+//	}
 
-	std::vector<std::string> scanAllAnalogOut()
-	{
-		auto dev_list = getAllDevices();
-		std::vector<std::string> aOut_lst = {};
-		for (auto dev : dev_list) {
-			if (isIioDeviceBufferCapable(dev) &&
-					(getIioDeviceType(dev) == ANALOG_DEV) &&
-					getIioDeviceDirection(dev) == OUTPUT) {
-				aOut_lst.push_back(dev);
-			}
-		}
-		return aOut_lst;
-	}
+//	std::vector<std::string> ContextImpl::scanAllAnalogOut()
+//	{
+//		auto dev_list = getAllDevices();
+//		std::vector<std::string> aOut_lst = {};
+//		for (auto dev : dev_list) {
+//			if (isIioDeviceBufferCapable(dev) &&
+//					(getIioDeviceType(dev) == ANALOG_DEV) &&
+//					getIioDeviceDirection(dev) == OUTPUT) {
+//				aOut_lst.push_back(dev);
+//			}
+//		}
+//		return aOut_lst;
+//	}
 
-	void scanAllDMM()
+	void ContextImpl::scanAllDMM()
 	{
 		auto dev_list = getIioDevByChannelAttrs({"raw", "scale"});
 		for (auto dev : dev_list) {
 			if (getIioDeviceDirection(dev.first) != OUTPUT) {
 				if (!getDMM(dev.first)) {
-					m_instancesDMM.push_back(new DMM(m_context, dev.first, m_sync));
+					m_instancesDMM.push_back(new DMMImpl(m_context, dev.first, m_sync));
 				}
 			}
 		}
 	}
 
-	DMM* getDMM(std::string dev_name)
+	DMM* ContextImpl::getDMM(std::string dev_name)
 	{
 		for (DMM* d : m_instancesDMM) {
 			if (d->getName() == dev_name) {
@@ -346,7 +349,7 @@ public:
 	}
 
 
-	DMM* getDMM(unsigned int index)
+	DMM* ContextImpl::getDMM(unsigned int index)
 	{
 		if (index < m_instancesDMM.size()) {
 			return m_instancesDMM.at(index);
@@ -355,18 +358,18 @@ public:
 		}
 	}
 
-	std::vector<DMM*> getAllDmm()
+	std::vector<DMM*> ContextImpl::getAllDmm()
 	{
 		return m_instancesDMM;
 	}
 
-	unsigned int getDmmCount()
+	unsigned int ContextImpl::getDmmCount()
 	{
 		return m_instancesDMM.size();
 	}
 
 
-	std::vector<std::string> getAvailableContextAttributes()
+	std::vector<std::string> ContextImpl::getAvailableContextAttributes()
 	{
 		std::vector<std::string> available_attrs = {};
 		for (auto a : m_context_attributes) {
@@ -375,7 +378,7 @@ public:
 		return available_attrs;
 	}
 
-	std::string getContextAttributeValue(std::string attr)
+	std::string ContextImpl::getContextAttributeValue(std::string attr)
 	{
 		std::string val;
 		__try {
@@ -386,7 +389,7 @@ public:
 		return val;
 	}
 
-	std::string getContextDescription()
+	std::string ContextImpl::getContextDescription()
 	{
 		if (!m_context) {
 			return "";
@@ -395,14 +398,14 @@ public:
 		return descr;
 	}
 
-	std::string getSerialNumber()
+	std::string ContextImpl::getSerialNumber()
 	{
 		return getContextAttributeValue("hw_serial");
 	}
 
-	M2k* toM2k(Context *parent)
+	M2k* ContextImpl::toM2k()
 	{
-		libm2k::contexts::M2k* dev = dynamic_cast<M2k*>(parent);
+		libm2k::contexts::M2k* dev = dynamic_cast<M2k*>(this);
 		if(dev) {
 			return dev;
 		} else {
@@ -410,31 +413,28 @@ public:
 		}
 	}
 
-	std::string getUri()
+	std::string ContextImpl::getUri()
 	{
 		return m_uri;
 	}
 
-	void scanAllPowerSupply()
+//	void ContextImpl::scanAllPowerSupply()
+//	{
+
+//	}
+
+//	void ContextImpl::scanAllDigital()
+//	{
+
+//	}
+
+	std::string ContextImpl::getFirmwareVersion()
 	{
-
-	}
-
-	void scanAllDigital()
-	{
-
-	}
-
-	std::string getFirmwareVersion()
-	{
+		std::cout << "firmwaaaaaaaare blabla\n";
 		return Utils::getFirmwareVersion(m_context);
 	}
 
-protected:
-	struct iio_context* m_context;
-	std::vector<libm2k::analog::DMM*> m_instancesDMM;
-private:
-	void initializeContextAttributes()
+	void ContextImpl::initializeContextAttributes()
 	{
 		const char *name;
 		const char *value;
@@ -455,13 +455,4 @@ private:
 		}
 	}
 
-	std::vector<libm2k::analog::GenericAnalogIn*> m_instancesAnalogIn;
-	std::vector<libm2k::analog::GenericAnalogOut*> m_instancesAnalogOut;
-	std::vector<libm2k::analog::PowerSupply*> m_instancesPowerSupply;
-	std::vector<libm2k::digital::GenericDigital*> m_instancesDigital;
-	std::map<std::string, std::string> m_context_attributes;
-
-	std::string m_uri;
-	std::string m_name;
-	bool m_sync;
-};
+//};

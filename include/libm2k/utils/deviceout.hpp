@@ -60,8 +60,9 @@ public:
 	virtual struct IIO_OBJECTS getIioObjects();
 
 private:
-	class DeviceOutImpl;
-	std::unique_ptr<DeviceOutImpl> m_pimpl;
+//	class DeviceOutImpl;
+//	std::unique_ptr<DeviceOutImpl> m_pimpl;
+	std::vector<Channel*> m_channel_list;
 };
 }
 }

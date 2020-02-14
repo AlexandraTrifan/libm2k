@@ -19,6 +19,7 @@
  *
  */
 
+#include "m2kanalogin_impl.hpp"
 #include <libm2k/utils/devicegeneric.hpp>
 #include <libm2k/utils/devicein.hpp>
 #include <libm2k/analog/m2kanalogin.hpp>
@@ -32,6 +33,7 @@
 #include <iio.h>
 #include <string.h>
 
+using namespace libm2k;
 using namespace libm2k::analog;
 using namespace libm2k::utils;
 using namespace std;
@@ -42,15 +44,16 @@ using namespace std::placeholders;
 #define LOW_MAX 25
 #define LOW_MIN -25
 
-class M2kAnalogIn::M2kAnalogInImpl : public DeviceIn {
-public:
-	M2kAnalogInImpl(iio_context * ctx, std::string adc_dev, bool sync, M2kHardwareTrigger *trigger) :
+//class M2kAnalogIn::M2kAnalogInImpl : public DeviceIn {
+//public:
+	M2kAnalogInImpl::M2kAnalogInImpl(iio_context * ctx, std::string adc_dev, bool sync, M2kHardwareTrigger *trigger) :
 		DeviceIn(ctx, adc_dev),
+		M2kAnalogIn(),
 		m_need_processing(false),
 		m_trigger(trigger)
 	{
 		m_m2k_fabric = make_shared<DeviceGeneric>(ctx, "m2k-fabric");
-		m_ad5625_dev = std::make_shared<DeviceGeneric>(ctx, "ad5625");
+		m_ad5625_dev = make_shared<DeviceGeneric>(ctx, "ad5625");
 
 		/* Filters applied while decimating affect the
 		/ amplitude of the received  data */
@@ -78,26 +81,26 @@ public:
 
 	}
 
-	~M2kAnalogInImpl()
+	M2kAnalogInImpl::~M2kAnalogInImpl()
 	{
 	}
 
-	void enableChannel(unsigned int chn_idx, bool enable)
+	void M2kAnalogInImpl::enableChannel(unsigned int chn_idx, bool enable)
 	{
 		DeviceGeneric::enableChannel(chn_idx, enable, false);
 	}
 
-	bool isChannelEnabled(unsigned int chn_idx)
+	bool M2kAnalogInImpl::isChannelEnabled(unsigned int chn_idx)
 	{
 		return DeviceGeneric::isChannelEnabled(chn_idx, false);
 	}
 
-	unsigned int getNbChannels()
+	unsigned int M2kAnalogInImpl::getNbChannels()
 	{
 		return DeviceGeneric::getNbChannels(false);
 	}
 
-	void init()
+	void M2kAnalogInImpl::init()
 	{
 		setOversamplingRatio(1);
 		setSampleRate(1E8);
@@ -118,7 +121,7 @@ public:
 		setKernelBuffersCount(1);
 	}
 
-	void syncDevice()
+	void M2kAnalogInImpl::syncDevice()
 	{
 		for (unsigned int i = 0; i < getNbChannels(); i++) {
 			//enabled???
@@ -135,28 +138,28 @@ public:
 		}
 	}
 
-	void setAdcCalibGain(ANALOG_IN_CHANNEL channel, double gain)
+	void M2kAnalogInImpl::setAdcCalibGain(ANALOG_IN_CHANNEL channel, double gain)
 	{
 		m_adc_calib_gain[channel] = gain;
 		m_trigger->setCalibParameters(channel, getScalingFactor(channel), m_adc_hw_vert_offset.at(channel));
 	}
 
-	void setAdcCalibOffset(ANALOG_IN_CHANNEL channel, int raw_offset)
+	void M2kAnalogInImpl::setAdcCalibOffset(ANALOG_IN_CHANNEL channel, int raw_offset)
 	{
 		m_adc_calib_offset[channel] = raw_offset;
 		m_trigger->setCalibParameters(channel, getScalingFactor(channel), m_adc_hw_vert_offset.at(channel));
 		getVerticalOffset(channel);
 	}
 
-	double convRawToVolts(short sample, double correctionGain,
-					      double hw_gain, double filterCompensation, double offset)
+	double M2kAnalogInImpl::convRawToVolts(int sample, double correctionGain,
+					      double hw_gain, double filterCompensation, double offset) const
 	{
 		// TO DO: explain this formula
 		return ((sample * 0.78) / ((1 << 11) * 1.3 * hw_gain) *
 			correctionGain * filterCompensation) + offset;
 	}
 
-	double convertRawToVolts(unsigned int channel, short sample)
+	double M2kAnalogInImpl::convertRawToVolts(unsigned int channel, short sample)
 	{
 		return convRawToVolts(sample,
 					 m_adc_calib_gain.at(channel),
@@ -165,7 +168,7 @@ public:
 					 -m_adc_hw_vert_offset.at(channel));
 	}
 
-	short convVoltsToRaw(double voltage, double correctionGain,
+	short M2kAnalogInImpl::convVoltsToRaw(double voltage, double correctionGain,
 					   double hw_gain, double filterCompensation, double offset)
 	{
 		// TO DO: explain this formula
@@ -173,7 +176,7 @@ public:
 				(2048 * 1.3 * hw_gain) / 0.78));
 	}
 
-	short convertVoltsToRaw(unsigned int channel, double voltage)
+	short M2kAnalogInImpl::convertVoltsToRaw(unsigned int channel, double voltage)
 	{
 		return convVoltsToRaw(voltage,
 					 m_adc_calib_gain.at(channel),
@@ -182,27 +185,22 @@ public:
 					 -m_adc_hw_vert_offset.at(channel));
 	}
 
-	double getCalibscale(unsigned int index)
+	double M2kAnalogInImpl::getCalibscale(unsigned int index)
 	{
 		return getDoubleValue(index, "calibscale");
 	}
 
-	double setCalibscale(unsigned int index, double calibscale)
+	double M2kAnalogInImpl::setCalibscale(unsigned int index, double calibscale)
 	{
 		return setDoubleValue(index, calibscale, "calibscale");
 	}
 
-	M2kHardwareTrigger *getTrigger()
+	M2kHardwareTrigger *M2kAnalogInImpl::getTrigger()
 	{
 		return m_trigger;
 	}
 
-	void cancelBuffer()
-	{
-		DeviceIn::cancelBuffer();
-	}
-
-	void flushBuffer()
+	void M2kAnalogInImpl::flushBuffer()
 	{
 		DeviceIn::flushBuffer();
 	}
@@ -211,7 +209,7 @@ public:
 	 * @brief Utility method to be used before and after ADC getSamples calls.
 	 * For the m2k-adc, all the channels have to be enabled before refilling
 	 */
-	void handleChannelsEnableState(bool before_refill)
+	void M2kAnalogInImpl::handleChannelsEnableState(bool before_refill)
 	{
 		if (before_refill) {
 			bool anyChannelEnabled = false;
@@ -236,8 +234,17 @@ public:
 
 	}
 
-	std::vector<std::vector<double>> getSamples(unsigned int nb_samples,
-						bool processed = false)
+	std::vector<std::vector<double>> M2kAnalogInImpl::getSamples(unsigned int nb_samples)
+	{
+		return getSamples(nb_samples, true);
+	}
+
+	std::vector<std::vector<double>> M2kAnalogInImpl::getSamplesRaw(unsigned int nb_samples)
+	{
+		return getSamples(nb_samples, false);
+	}
+
+	std::vector<std::vector<double>> M2kAnalogInImpl::getSamples(unsigned int nb_samples, bool processed)
 	{
 		if (processed) {
 			m_need_processing = true;
@@ -255,8 +262,12 @@ public:
 		return samps;
 	}
 
-	const double *getSamplesInterleaved(unsigned int nb_samples,
-						bool processed = false)
+	const double* M2kAnalogInImpl::getSamplesInterleaved(unsigned int nb_samples)
+	{
+		return getSamplesInterleaved(nb_samples, true);
+	}
+
+	const double *M2kAnalogInImpl::getSamplesInterleaved(unsigned int nb_samples, bool processed)
 	{
 		if (processed) {
 			m_need_processing = true;
@@ -274,7 +285,7 @@ public:
 		return samps;
 	}
 
-	const short *getSamplesRawInterleaved(unsigned int nb_samples)
+	const short *M2kAnalogInImpl::getSamplesRawInterleaved(unsigned int nb_samples)
 	{
 		m_samplerate = getSampleRate();
 		handleChannelsEnableState(true);
@@ -283,7 +294,7 @@ public:
 		return samps;
 	}
 
-	double processSample(int16_t sample, unsigned int channel)
+	double M2kAnalogInImpl::processSample(int16_t sample, unsigned int channel)
 	{
 		if (m_need_processing) {
 			return convRawToVolts(sample,
@@ -296,13 +307,13 @@ public:
 		}
 	}
 
-	short getVoltageRaw(unsigned int ch)
+	short M2kAnalogInImpl::getVoltageRaw(unsigned int ch)
 	{
 		ANALOG_IN_CHANNEL chn = static_cast<ANALOG_IN_CHANNEL>(ch);
 		return getVoltageRaw(chn);
 	}
 
-	short getVoltageRaw(ANALOG_IN_CHANNEL ch)
+	short M2kAnalogInImpl::getVoltageRaw(ANALOG_IN_CHANNEL ch)
 	{
 		unsigned int num_samples = 100;
 		M2K_TRIGGER_MODE mode;
@@ -326,7 +337,7 @@ public:
 		return (short)avg;
 	}
 
-	std::vector<short> getVoltageRaw()
+	std::vector<short> M2kAnalogInImpl::getVoltageRaw()
 	{
 		unsigned int num_samples = 100;
 		std::vector<short> avgs;
@@ -349,19 +360,19 @@ public:
 		return avgs;
 	}
 
-	short *getVoltageRawP()
+	const short *M2kAnalogInImpl::getVoltageRawP()
 	{
 		std::vector<short> avgs = getVoltageRaw();
 		return avgs.data();
 	}
 
-	double getVoltage(unsigned int ch)
+	double M2kAnalogInImpl::getVoltage(unsigned int ch)
 	{
 		ANALOG_IN_CHANNEL chn = static_cast<ANALOG_IN_CHANNEL>(ch);
 		return getVoltage(chn);
 	}
 
-	double getVoltage(ANALOG_IN_CHANNEL ch)
+	double M2kAnalogInImpl::getVoltage(ANALOG_IN_CHANNEL ch)
 	{
 		unsigned int num_samples = 100;
 		M2K_TRIGGER_MODE mode;
@@ -384,7 +395,7 @@ public:
 		return avg;
 	}
 
-	std::vector<double> getVoltage()
+	std::vector<double> M2kAnalogInImpl::getVoltage()
 	{
 		size_t num_samples = 100;
 		std::vector<double> avgs;
@@ -406,13 +417,13 @@ public:
 		return avgs;
 	}
 
-	double *getVoltageP()
+	const double *M2kAnalogInImpl::getVoltageP()
 	{
 		std::vector<double> avgs = getVoltage();
 		return avgs.data();
 	}
 
-	double getScalingFactor(ANALOG_IN_CHANNEL ch)
+	double M2kAnalogInImpl::getScalingFactor(ANALOG_IN_CHANNEL ch)
 	{
 		return (0.78 / ((1 << 11) * 1.3 *
 				getValueForRange(m_input_range.at(ch))) *
@@ -420,19 +431,19 @@ public:
 			getFilterCompensation(getSampleRate()));
 	}
 
-	double getScalingFactor(unsigned int ch)
+	double M2kAnalogInImpl::getScalingFactor(unsigned int ch)
 	{
 		ANALOG_IN_CHANNEL channel = static_cast<ANALOG_IN_CHANNEL>(ch);
 		return getScalingFactor(channel);
 	}
 
-	std::pair<double, double> getHysteresisRange(ANALOG_IN_CHANNEL chn)
+	std::pair<double, double> M2kAnalogInImpl::getHysteresisRange(ANALOG_IN_CHANNEL chn)
 	{
 		std::pair<double, double> m2k_range = getRangeLimits(getRange(chn));
 		return std::pair<double, double>(0, m2k_range.second / 10);
 	}
 
-	void setRange(ANALOG_IN_CHANNEL channel, M2K_RANGE range)
+	void M2kAnalogInImpl::setRange(ANALOG_IN_CHANNEL channel, M2K_RANGE range)
 	{
 		const char *str_gain_mode = "";
 
@@ -447,7 +458,7 @@ public:
 		m_trigger->setCalibParameters(channel, getScalingFactor(channel), m_adc_hw_vert_offset.at(channel));
 	}
 
-	void setRange(ANALOG_IN_CHANNEL channel, double min, double max)
+	void M2kAnalogInImpl::setRange(ANALOG_IN_CHANNEL channel, double min, double max)
 	{
 
 		if ((min >= HIGH_MIN) && (max <= HIGH_MAX)) {
@@ -457,12 +468,12 @@ public:
 		}
 	}
 
-	M2K_RANGE getRange(ANALOG_IN_CHANNEL channel)
+	M2K_RANGE M2kAnalogInImpl::getRange(ANALOG_IN_CHANNEL channel)
 	{
 		return m_input_range[channel];
 	}
 
-	M2K_RANGE getRangeDevice(ANALOG_IN_CHANNEL channel)
+	M2K_RANGE M2kAnalogInImpl::getRangeDevice(ANALOG_IN_CHANNEL channel)
 	{
 		M2K_RANGE range = PLUS_MINUS_25V;
 		auto gain = m_m2k_fabric->getStringValue(channel, "gain");
@@ -474,7 +485,7 @@ public:
 		return range;
 	}
 
-	std::pair<double, double> getRangeLimits(M2K_RANGE range)
+	std::pair<double, double> M2kAnalogInImpl::getRangeLimits(M2K_RANGE range)
 	{
 		if (range == PLUS_MINUS_25V) {
 			return std::pair<double, double>(LOW_MIN, LOW_MAX);
@@ -483,7 +494,7 @@ public:
 		}
 	}
 
-	std::vector<std::pair<std::string, std::pair<double, double>>> getAvailableRanges()
+	std::vector<std::pair<std::string, std::pair<double, double>>> M2kAnalogInImpl::getAvailableRanges()
 	{
 		std::vector<std::pair<std::string, std::pair <double, double>>> ranges;
 		std::pair<std::string, std::pair <double, double>> p;
@@ -499,7 +510,7 @@ public:
 	}
 
 
-	void setVerticalOffset(ANALOG_IN_CHANNEL channel, double vertOffset)
+	void M2kAnalogInImpl::setVerticalOffset(ANALOG_IN_CHANNEL channel, double vertOffset)
 	{
 		double gain = 1.3;
 		double vref = 1.2;
@@ -515,7 +526,7 @@ public:
 		m_trigger->setCalibParameters(channel, getScalingFactor(channel), m_adc_hw_vert_offset.at(channel));
 	}
 
-	double getVerticalOffset(ANALOG_IN_CHANNEL channel)
+	double M2kAnalogInImpl::getVerticalOffset(ANALOG_IN_CHANNEL channel)
 	{
 		double gain = 1.3;
 		double vref = 1.2;
@@ -529,52 +540,52 @@ public:
 		return vert_offset;
 	}
 
-	int getOversamplingRatio()
+	int M2kAnalogInImpl::getOversamplingRatio()
 	{
 		return getLongValue("oversampling_ratio");
 	}
 
-	int getOversamplingRatio(unsigned int chn_idx)
+	int M2kAnalogInImpl::getOversamplingRatio(unsigned int chn_idx)
 	{
 		return getLongValue(chn_idx, "oversampling_ratio");
 	}
 
-	int setOversamplingRatio(int oversampling_ratio)
+	int M2kAnalogInImpl::setOversamplingRatio(int oversampling_ratio)
 	{
 		return setLongValue(oversampling_ratio, "oversampling_ratio");
 	}
 
-	int setOversamplingRatio(unsigned int chn_idx, int oversampling_ratio)
+	int M2kAnalogInImpl::setOversamplingRatio(unsigned int chn_idx, int oversampling_ratio)
 	{
 		return setLongValue(chn_idx, oversampling_ratio, "oversampling_ratio");
 	}
 
 
-	double getSampleRate()
+	double M2kAnalogInImpl::getSampleRate()
 	{
 		return getDoubleValue("sampling_frequency");
 	}
 
-	double getSampleRate(unsigned int chn_idx)
+	double M2kAnalogInImpl::getSampleRate(unsigned int chn_idx)
 	{
 		return getDoubleValue(chn_idx, "sampling_frequency");
 	}
 
-	double setSampleRate(double samplerate)
+	double M2kAnalogInImpl::setSampleRate(double samplerate)
 	{
 		return setDoubleValue(samplerate, "sampling_frequency");
 		m_trigger->setCalibParameters(0, getScalingFactor(0), m_adc_hw_vert_offset.at(0));
 		m_trigger->setCalibParameters(1, getScalingFactor(1), m_adc_hw_vert_offset.at(1));
 	}
 
-	double setSampleRate(unsigned int chn_idx, double samplerate)
+	double M2kAnalogInImpl::setSampleRate(unsigned int chn_idx, double samplerate)
 	{
 		return setDoubleValue(chn_idx, samplerate, "sampling_frequency");
 		m_trigger->setCalibParameters(0, getScalingFactor(0), m_adc_hw_vert_offset.at(0));
 		m_trigger->setCalibParameters(1, getScalingFactor(1), m_adc_hw_vert_offset.at(1));
 	}
 
-	double getFilterCompensation(double samplerate)
+	double M2kAnalogInImpl::getFilterCompensation(double samplerate)
 	{
 		double compensation = 0.0;
 		if(m_filter_compensation_table.find(samplerate) != m_filter_compensation_table.end()) {
@@ -585,7 +596,7 @@ public:
 		return compensation;
 	}
 
-	double getValueForRange(M2K_RANGE range)
+	double M2kAnalogInImpl::getValueForRange(M2K_RANGE range)
 	{
 		if (range == PLUS_MINUS_25V) {
 			return 0.02017;
@@ -596,24 +607,55 @@ public:
 		}
 	}
 
-	struct IIO_OBJECTS getIioObjects()
+	struct IIO_OBJECTS M2kAnalogInImpl::getIioObjects()
 	{
 		return DeviceIn::getIioObjects();
 	}
 
-private:
-	std::shared_ptr<DeviceGeneric> m_ad5625_dev;
-	std::shared_ptr<DeviceGeneric> m_m2k_fabric;
-	bool m_need_processing;
+	void M2kAnalogInImpl::cancelBuffer()
+	{
+		DeviceIn::cancelBuffer();
+	}
 
-	double m_samplerate;
-	libm2k::M2kHardwareTrigger *m_trigger;
-	std::vector<M2K_RANGE> m_input_range;
+	void M2kAnalogInImpl::setKernelBuffersCount(unsigned int count)
+	{
+		DeviceGeneric::setKernelBuffersCount(count);
+	}
 
-	std::vector<double> m_adc_calib_gain;
-	std::vector<double> m_adc_calib_offset;
-	std::vector<double> m_adc_hw_vert_offset_raw;
-	std::vector<double> m_adc_hw_vert_offset;
-	std::map<double, double> m_filter_compensation_table;
-	std::vector<bool> m_channels_enabled;
-};
+	std::vector<double> M2kAnalogInImpl::getAvailableSampleRates()
+	{
+		return DeviceGeneric::getAvailableSampleRates();
+	}
+
+	std::string M2kAnalogInImpl::getName()
+	{
+		return DeviceGeneric::getName();
+	}
+
+	void M2kAnalogInImpl::convertChannelHostFormat(unsigned int chn_idx, int16_t *avg, int16_t *src)
+	{
+		DeviceGeneric::convertChannelHostFormat(chn_idx, avg, src, false);
+	}
+
+	void M2kAnalogInImpl::convertChannelHostFormat(unsigned int chn_idx, double *avg, int16_t *src)
+	{
+		DeviceGeneric::convertChannelHostFormat(chn_idx, avg, src, false);
+	}
+
+
+//private:
+//	std::shared_ptr<DeviceGeneric> m_ad5625_dev;
+//	std::shared_ptr<DeviceGeneric> m_m2k_fabric;
+//	bool m_need_processing;
+
+//	double m_samplerate;
+//	libm2k::M2kHardwareTrigger *m_trigger;
+//	std::vector<M2K_RANGE> m_input_range;
+
+//	std::vector<double> m_adc_calib_gain;
+//	std::vector<double> m_adc_calib_offset;
+//	std::vector<double> m_adc_hw_vert_offset_raw;
+//	std::vector<double> m_adc_hw_vert_offset;
+//	std::map<double, double> m_filter_compensation_table;
+//	std::vector<bool> m_channels_enabled;
+//};

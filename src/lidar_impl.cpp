@@ -1,10 +1,10 @@
-#include "context_impl.cpp"
+#include "lidar_impl.hpp"
 #include <vector>
 #include <libm2k/utils/utils.hpp>
 #include <libm2k/utils/channel.hpp>
 #include <libm2k/utils/devicegeneric.hpp>
 #include <libm2k/utils/devicein.hpp>
-#include <libm2k/lidar.hpp>
+#include <libm2k/m2kexceptions.hpp>
 #include <iio.h>
 #include <iostream>
 
@@ -12,9 +12,9 @@ using namespace std;
 using namespace libm2k::contexts;
 using namespace libm2k::utils;
 
-class Lidar::LidarImpl : public ContextImpl {
-public:
-	LidarImpl(std::string uri, iio_context* ctx, std::string name, bool sync) :
+//class Lidar::LidarImpl : public ContextImpl {
+//public:
+	LidarImpl::LidarImpl(std::string uri, iio_context* ctx, std::string name, bool sync) :
 		ContextImpl(uri, ctx, name, sync) {
 
 		pulse_dev = new DeviceGeneric(ctx, "7c700000.axi-pulse-capture");
@@ -24,11 +24,11 @@ public:
 		setAllIIoAttributesToDefaultValues();
 	}
 
-	void initialize() {
+	void LidarImpl::initialize() {
 		;
 	}
     
-	void channelEnableDisable(string channel, bool enable) {
+	void LidarImpl::channelEnableDisable(string channel, bool enable) {
 		if	(channel == "voltage0")
 			adc_dev->enableChannel(0, enable, false);
 		else if (channel == "voltage1")
@@ -44,7 +44,7 @@ public:
 					channel + ", does not exist");
 	}
 
-	vector<string> enabledChannelsList() {
+	vector<string> LidarImpl::enabledChannelsList() {
 		vector<string> enabled_channels;
 		if (adc_dev->isChannelEnabled(0, false))
 			enabled_channels.push_back("voltage0");
@@ -59,7 +59,7 @@ public:
 		return enabled_channels;
 	}
 
-	map<string, vector<int8_t>> readChannels(unsigned int nb_samples) {
+	map<string, vector<int8_t>> LidarImpl::readChannels(unsigned int nb_samples) {
 		vector<string> enabled_channels = enabledChannelsList();
 		unsigned int enabled_channels_count = enabled_channels.size();
 	
@@ -90,7 +90,7 @@ public:
 		return result;
 	}
 
-	static double adp_bias_volts_to_raw_convert(double value, bool inverse) {
+	double LidarImpl::adp_bias_volts_to_raw_convert(double value, bool inverse) {
 		double ret;
 		if (inverse)
 			ret = -((value * 5 * 18.18) / 4096) + 122;
@@ -99,7 +99,7 @@ public:
 		return ret;
 	}
 
-	static double tilt_volts_to_raw_convert(double value, bool inverse) {
+	double LidarImpl::tilt_volts_to_raw_convert(double value, bool inverse) {
 		double ret;
 		if (inverse)
 			ret = (value * 5) / 4096;
@@ -108,56 +108,76 @@ public:
 		return ret;
 	}
     
-	void setApdBias(double bias) {
+	void LidarImpl::setApdBias(unsigned int bias) {
 		afe_dev->setLongValue(0, adp_bias_volts_to_raw_convert(bias, false), "raw", true);
 	}
 
-	void setTiltVoltage(double voltage) {
+	void LidarImpl::setTiltVoltage(unsigned int voltage) {
 		afe_dev->setLongValue(1, tilt_volts_to_raw_convert(voltage, false), "raw", true);
 	}
 
-	void laserEnable() {
+	void LidarImpl::laserEnable() {
 		pulse_dev->setStringValue(0, "en", "1", true);
 	}
 
-	void laserDisable() {
+	void LidarImpl::laserDisable() {
 		pulse_dev->setStringValue(0, "en", "0", true);
 	}
 
-	void setLaserPulseWidth(long long pulse_width) {
+	void LidarImpl::setLaserPulseWidth(long long pulse_width) {
 		pulse_dev->setLongValue(0, pulse_width, "pulse_width_ns", true);
 	}
 
-	void setLaserFrequency(long long frequency) {
+	void LidarImpl::setLaserFrequency(long long frequency) {
 		pulse_dev->setLongValue(0, frequency, "frequency", true);
 	}
 
-	void setChannelSequencerEnableDisable(bool status) {
+	void LidarImpl::enableChannelSequencer()
+	{
+		setChannelSequencerEnableDisable(true);
+	}
+
+	void LidarImpl::disableChannelSequencer()
+	{
+		setChannelSequencerEnableDisable(false);
+	}
+
+	void LidarImpl::setChannelSequencerEnableDisable(bool status) {
 		pulse_dev->setBoolValue(status, "sequencer_en");
 	}
 
-	void setChannelSequencerOpMode(const char* mode) {
+	void LidarImpl::setChannelSequencerOpMode(const char* mode) {
 		pulse_dev->setStringValue("sequencer_mode", string(mode));
 	}
 
-	void setChannelSequencerOrderAutoMode(const char* order) {
+	void LidarImpl::setChannelSequencerOrderAutoMode(const char* order) {
 		pulse_dev->setStringValue("sequencer_auto_cfg", string(order));
 	}
 
-	void setChannelSequencerOrderManualMode(const char* order) {
+	void LidarImpl::setChannelSequencerOrderManualMode(const char* order) {
 		pulse_dev->setStringValue("sequencer_manual_chsel", string(order));
 	}
 
-	void setSequencerPulseDelay(long long ns) {
+	void LidarImpl::setSequencerPulseDelay(long long ns) {
 		pulse_dev->setLongValue(ns, "sequencer_pulse_delay_ns");
 	}
 
-	void setAllIIoAttributesToDefaultValues() {
+	void LidarImpl::setChannelSequencerOpModeManual()
+	{
+		setChannelSequencerOpMode("manual");
+	}
+
+	void LidarImpl::setChannelSequencerOpModeAuto()
+	{
+		setChannelSequencerOpMode("auto");
+	}
+
+	void LidarImpl::setAllIIoAttributesToDefaultValues() {
 		setChannelSequencerEnableDisable(false);
 		setChannelSequencerOpMode("auto");
 		setChannelSequencerOrderManualMode("0, 0, 0, 0");
 		setChannelSequencerOrderAutoMode("0, 1, 2, 3");
-		setSequencerPulseDelay(248);	    
+		setSequencerPulseDelay(248);
 		laserEnable();
 		setLaserFrequency(50000);
 		setLaserPulseWidth(20);
@@ -168,12 +188,8 @@ public:
 		channelEnableDisable("voltage4", true);
 	}
 
-	~LidarImpl() {
+	LidarImpl::~LidarImpl() {
 		;
 	}
     
-private:
-	DeviceGeneric* pulse_dev;
-	DeviceGeneric* afe_dev;
-	DeviceIn* adc_dev;
-};
+

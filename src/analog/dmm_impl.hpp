@@ -19,11 +19,12 @@
  *
  */
 
-#ifndef GENERICDMM_HPP
-#define GENERICDMM_HPP
+#ifndef GENERICDMM_IMPL_HPP
+#define GENERICDMM_IMPL_HPP
 
-#include <libm2k/m2kglobal.hpp>
+#include <libm2k/analog/dmm.hpp>
 #include <libm2k/analog/enums.hpp>
+#include <libm2k/utils/devicein.hpp>
 #include <vector>
 #include <map>
 #include <string>
@@ -42,18 +43,24 @@ namespace analog {
  * @class DMM
  * @brief Controls the digital multimeter
  */
-class LIBM2K_API DMM {
+class DMMImpl : public DMM {
 public:
 	/**
 	* @private
 	*/
-	virtual ~DMM() {}
+	DMMImpl(struct iio_context *ctx, std::string dev, bool sync);
 
 
 	/**
 	* @private
 	*/
-	virtual void init() = 0;
+	virtual ~DMMImpl();
+
+
+	/**
+	* @private
+	*/
+	void init();
 
 
 	/**
@@ -61,7 +68,7 @@ public:
 	*
 	* @return A list containing the name of all channels
 	*/
-	virtual std::vector<std::string> getAllChannels() = 0;
+	std::vector<std::string> getAllChannels();
 
 
 	/**
@@ -70,7 +77,7 @@ public:
 	* @param index The index corresponding to the channel
 	* @return A structure containing additional information
 	*/
-	virtual libm2k::analog::DMM_READING readChannel(unsigned int index) = 0;
+	libm2k::analog::DMM_READING readChannel(unsigned int index);
 
 
 	/**
@@ -79,7 +86,7 @@ public:
 	* @param chn_name The name corresponding to the channel
 	* @return A structure containing additional information
 	*/
-	virtual libm2k::analog::DMM_READING readChannel(std::string chn_name) = 0;
+	libm2k::analog::DMM_READING readChannel(std::string chn_name);
 
 
 	/**
@@ -87,7 +94,7 @@ public:
 	*
 	* @return A list containing structures for each channel
 	*/
-	virtual std::vector<libm2k::analog::DMM_READING> readAll() = 0;
+	std::vector<libm2k::analog::DMM_READING> readAll();
 
 
 	/**
@@ -95,12 +102,17 @@ public:
 	*
 	* @return The name of the device
 	*/
-	virtual std::string getName() = 0;
+	std::string getName();
 
+private:
+	std::map<std::string, unsigned int> m_channel_id_list;
+	std::string m_dev_name;
+	std::vector<libm2k::utils::DeviceIn*> m_device_in_list;
+	libm2k::utils::DeviceIn *getDevice(int index);
 };
 }
 }
 
 
 
-#endif //GENERICDMM_HPP
+#endif //GENERICDMM_IMPL_HPP

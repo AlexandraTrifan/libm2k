@@ -19,26 +19,25 @@
  *
  */
 
-#ifndef M2K_H
-#define M2K_H
+#ifndef M2K_IMPL_H
+#define M2K_IMPL_H
 
-#include <libm2k/m2kglobal.hpp>
-#include <libm2k/context.hpp>
-#include <iostream>
+#include <libm2k/m2k.hpp>
+#include "context_impl.hpp"
 
 namespace libm2k {
-namespace analog {
-class M2kAnalogIn;
-class M2kAnalogOut;
-class M2kPowerSupply;
-}
+//namespace analog {
+//class M2kAnalogIn;
+//class M2kAnalogOut;
+//class M2kPowerSupply;
+//}
 
-namespace digital {
-class M2kDigital;
-}
+//namespace digital {
+//class M2kDigital;
+//}
 
+class M2kHardwareTrigger;
 class M2kCalibration;
-//class ContextImpl;
 
 /** @defgroup contexts Contexts
  * @brief Contains the representation of the M2K
@@ -53,19 +52,19 @@ namespace contexts {
 * @class M2k
 * @brief Controls the ADALM2000
 */
-class LIBM2K_API M2k : public virtual Context
+class M2kImpl : public M2k, public ContextImpl
 {
 public:
 	/**
 	* @private
 	*/
-//	M2k(std::string uri, iio_context* ctx, std::string name, bool sync);
+	M2kImpl(std::string uri, iio_context* ctx, std::string name, bool sync);
 
 
 	/**
 	* @private
 	*/
-	virtual ~M2k() {}
+	virtual ~M2kImpl();
 
 
 	/**
@@ -77,43 +76,43 @@ public:
 	 *	- reset calibration coefficients - a calibration is needed afterwards
 	 *	- disable all TX digital channels and enable all RX digital channels
 	 */
-	virtual void init() = 0;
+	void init();
 
 
 	/**
 	* @private
 	*/
-	virtual void deinitialize() = 0;
-
-
-//	/**
-//	* @private
-//	*/
-//	void scanAllAnalogIn() = 0;
-
-
-//	/**
-//	* @private
-//	*/
-//	void scanAllAnalogOut() = 0;
-
-
-//	/**
-//	* @private
-//	*/
-//	void scanAllPowerSupply() = 0;
-
-
-//	/**
-//	* @private
-//	*/
-//	void scanAllDigital() = 0;
+	void deinitialize();
 
 
 	/**
 	* @private
 	*/
-	virtual void calibrate() = 0;
+	void scanAllAnalogIn();
+
+
+	/**
+	* @private
+	*/
+	void scanAllAnalogOut();
+
+
+	/**
+	* @private
+	*/
+	void scanAllPowerSupply();
+
+
+	/**
+	* @private
+	*/
+	void scanAllDigital();
+
+
+	/**
+	* @private
+	*/
+	void calibrate();
 
 
 	/**
@@ -122,7 +121,7 @@ public:
 	* @return On succces, true
 	* @return Otherwise, false
 	*/
-	virtual bool calibrateADC() = 0;
+	bool calibrateADC();
 
 
 	/**
@@ -131,13 +130,13 @@ public:
 	* @return On succces, true
 	* @return Otherwise, false
 	*/
-	virtual bool calibrateDAC() = 0;
+	bool calibrateDAC();
 
 
 	/**
 	* @private
 	*/
-	virtual bool resetCalibration() = 0;
+	bool resetCalibration();
 
 
 	/**
@@ -146,7 +145,7 @@ public:
 	* @return On success, a pointer to a Digital object
 	* @throw EXC_INVALID_PARAMETER No M2K digital device found
 	*/
-	virtual libm2k::digital::M2kDigital* getDigital() = 0;
+	libm2k::digital::M2kDigital* getDigital();
 
 
 	/**
@@ -155,7 +154,7 @@ public:
 	* @return On success, a pointer to a PowerSupply object
 	* @throw EXC_INVALID_PARAMETER No M2K power supply
 	*/
-	virtual libm2k::analog::M2kPowerSupply* getPowerSupply() = 0;
+	libm2k::analog::M2kPowerSupply* getPowerSupply();
 
 
 	/**
@@ -164,7 +163,7 @@ public:
 	* @return On success, a pointer to an AnalogIn object
 	* @return On error, null is returned
 	*/
-	virtual libm2k::analog::M2kAnalogIn* getAnalogIn() = 0;
+	libm2k::analog::M2kAnalogIn* getAnalogIn();
 
 
 	/**
@@ -174,7 +173,7 @@ public:
 	* @return On success, a pointer to an AnalogIn object
 	* @return If the name does not correspond to any device, null is returned
 	*/
-	virtual libm2k::analog::M2kAnalogIn* getAnalogIn(std::string dev_name) = 0;
+	libm2k::analog::M2kAnalogIn* getAnalogIn(std::string dev_name);
 
 
 
@@ -184,17 +183,17 @@ public:
 	* @return On success, a pointer to an AnalogOut object
 	* @return On error, null is returned
 	*/
-	virtual libm2k::analog::M2kAnalogOut* getAnalogOut() = 0;
+	libm2k::analog::M2kAnalogOut* getAnalogOut();
 
 
 	/**
 	* @private
 	*/
-	virtual std::vector<libm2k::analog::M2kAnalogIn*> getAllAnalogIn() = 0;
+	std::vector<libm2k::analog::M2kAnalogIn*> getAllAnalogIn();
 	/**
 	* @private
 	*/
-	virtual std::vector<libm2k::analog::M2kAnalogOut*> getAllAnalogOut() = 0;
+	std::vector<libm2k::analog::M2kAnalogOut*> getAllAnalogOut();
 
 
 	/**
@@ -202,7 +201,7 @@ public:
 	*
 	* @return The value of the calibration offset
 	*/
-	virtual int getDacBCalibrationOffset() = 0;
+	int getDacBCalibrationOffset();
 
 
 	/**
@@ -210,7 +209,7 @@ public:
 	*
 	* @return The value of the calibration offset
 	*/
-	virtual int getDacACalibrationOffset() = 0;
+	int getDacACalibrationOffset();
 
 
 	/**
@@ -218,7 +217,7 @@ public:
 	*
 	* @return The value of the calibration gain
 	*/
-	virtual double getDacBCalibrationGain() = 0;
+	double getDacBCalibrationGain();
 
 
 	/**
@@ -226,7 +225,7 @@ public:
 	*
 	* @return The value of the calibration gain
 	*/
-	virtual double getDacACalibrationGain() = 0;
+	double getDacACalibrationGain();
 
 
 	/**
@@ -235,7 +234,7 @@ public:
 	* @param chn The index corresponding to a channel
 	* @return The value of the calibration offset
 	*/
-	virtual int getAdcCalibrationOffset(unsigned int chn) = 0;
+	int getAdcCalibrationOffset(unsigned int chn);
 
 
 	/**
@@ -244,14 +243,14 @@ public:
 	* @param chn The index corresponding to a channel
 	* @return The value of the calibration gain
 	*/
-	virtual double getAdcCalibrationGain(unsigned int chn) = 0;
+	double getAdcCalibrationGain(unsigned int chn);
 
 	/**
 	* @brief Set a timeout for I/O operations
 	*
 	* @param timeout A positive integer representing the time in milliseconds after which a timeout occurs. A value of 0 is used to specify that no timeout should occur.
 	*/
-	virtual void setTimeout(unsigned int timeout) = 0;
+	void setTimeout(unsigned int timeout);
 
 
 	/**
@@ -261,7 +260,7 @@ public:
 	*
 	* @note For turning on the led, set the parameter true.
 	*/
-	virtual void setLed(bool on) = 0;
+	void setLed(bool on);
 
 
 	/**
@@ -270,10 +269,23 @@ public:
 	* @return If the led is turned on, true
 	* @return Otherwise, false
 	*/
-	virtual bool getLed() = 0;
+	bool getLed();
+
+private:
+	M2kCalibration* m_calibration;
+	libm2k::M2kHardwareTrigger *m_trigger;
+	std::vector<analog::M2kAnalogOut*> m_instancesAnalogOut;
+	std::vector<analog::M2kAnalogIn*> m_instancesAnalogIn;
+	std::vector<analog::M2kPowerSupply*> m_instancesPowerSupply;
+	std::vector<digital::M2kDigital*> m_instancesDigital;
+	bool m_sync;
+	bool m_deinit;
+	std::string m_firmware_version;
 //private:
 //	class M2kImpl;
-//	std::shared_ptr<M2kImpl> m_pimpl;
+	//	std::shared_ptr<M2kImpl> m_pimpl;
+	void blinkLed(const double duration = 4, bool blocking = false);
+	void initialize();
 };
 }
 }

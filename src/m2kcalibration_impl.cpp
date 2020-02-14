@@ -19,8 +19,8 @@
  *
  */
 
-#include <libm2k/m2khardwaretrigger.hpp>
-#include <libm2k/m2kcalibration.hpp>
+#include "m2kcalibration_impl.hpp"
+#include "analog/m2kanalogin_impl.hpp"
 #include <libm2k/utils/devicegeneric.hpp>
 #include <libm2k/analog/m2kanalogout.hpp>
 #include <libm2k/analog/m2kanalogin.hpp>
@@ -39,13 +39,13 @@ using namespace libm2k;
 using namespace libm2k::analog;
 using namespace libm2k::utils;
 
-class M2kCalibration::M2kCalibrationImpl {
-public:
-	M2kCalibrationImpl(struct iio_context* ctx, M2kAnalogIn* analogIn,
+//class M2kCalibration::M2kCalibrationImpl {
+//public:
+	M2kCalibrationImpl::M2kCalibrationImpl(struct iio_context* ctx, M2kAnalogIn* analogIn,
 				       M2kAnalogOut* analogOut):
 		m_cancel(false),
 		m_ctx(ctx),
-		m_m2k_adc(analogIn),
+		m_m2k_adc(dynamic_cast<M2kAnalogInImpl*>(analogIn)),
 		m_m2k_dac(analogOut),
 		m_m2k_trigger(analogIn->getTrigger()),
 		m_adc_calibrated(false),
@@ -53,7 +53,7 @@ public:
 		m_initialized(false),
 		m_ad5625_dev(nullptr)
 	{
-		m_ad5625_dev = std::make_shared<DeviceGeneric>(m_ctx, "ad5625");
+		m_ad5625_dev = make_shared<DeviceGeneric>(m_ctx, "ad5625");
 		m_adc_channels_enabled.push_back(false);
 		m_adc_channels_enabled.push_back(false);
 		m_dac_channels_enabled.push_back(false);
@@ -61,11 +61,11 @@ public:
 		m_dac_default_vlsb = 10.0 / ((double)( 1 << 12 ));
 	}
 
-	~M2kCalibrationImpl()
+	M2kCalibrationImpl::~M2kCalibrationImpl()
 	{
 	}
 
-	bool initialize()
+	bool M2kCalibrationImpl::initialize()
 	{
 		m_initialized = false;
 
@@ -87,12 +87,12 @@ public:
 		return m_initialized;
 	}
 
-	bool isInitialized() const
+	bool M2kCalibrationImpl::isInitialized() const
 	{
 		return m_initialized;
 	}
 
-	void setAdcInCalibMode()
+	void M2kCalibrationImpl::setAdcInCalibMode()
 	{
 		// Make sure hardware triggers are disabled before calibrating
 		__try {
@@ -121,7 +121,7 @@ public:
 		}
 	}
 
-	void setDacInCalibMode()
+	void M2kCalibrationImpl::setDacInCalibMode()
 	{
 		__try {
 			dac_a_sampl_freq = m_m2k_dac->getSampleRate(0);
@@ -142,7 +142,7 @@ public:
 		}
 	}
 
-	void restoreAdcFromCalibMode()
+	void M2kCalibrationImpl::restoreAdcFromCalibMode()
 	{
 		__try {
 			m_m2k_trigger->setAnalogMode(ANALOG_IN_CHANNEL_1, m_trigger0_mode);
@@ -161,7 +161,7 @@ public:
 		}
 	}
 
-	void restoreDacFromCalibMode()
+	void M2kCalibrationImpl::restoreDacFromCalibMode()
 	{
 		__try {
 			m_m2k_dac->setSampleRate(0, dac_a_sampl_freq);
@@ -176,7 +176,7 @@ public:
 		}
 	}
 
-	void configAdcSamplerate()
+	void M2kCalibrationImpl::configAdcSamplerate()
 	{
 		// Make sure we calibrate at the highest sample rate
 		__try {
@@ -187,7 +187,7 @@ public:
 		}
 	}
 
-	void configDacSamplerate()
+	void M2kCalibrationImpl::configDacSamplerate()
 	{
 		__try {
 			m_m2k_dac->setSampleRate(0, 75E6);
@@ -199,7 +199,7 @@ public:
 		}
 	}
 
-	bool calibrateADCoffset()
+	bool M2kCalibrationImpl::calibrateADCoffset()
 	{
 		double gain = 1.3;
 		double range = 3.192;
@@ -256,7 +256,7 @@ public:
 		return calibrated;
 	}
 
-	bool calibrateADCgain()
+	bool M2kCalibrationImpl::calibrateADCgain()
 	{
 		int16_t tmp;
 		double vref1 = 0.46172;
@@ -302,27 +302,27 @@ public:
 		return calibrated;
 	}
 
-	int adcOffsetChannel0() const
+	int M2kCalibrationImpl::adcOffsetChannel0() const
 	{
 		return m_adc_ch0_offset;
 	}
 
-	int adcOffsetChannel1() const
+	int M2kCalibrationImpl::adcOffsetChannel1() const
 	{
 		return m_adc_ch1_offset;
 	}
 
-	double adcGainChannel0() const
+	double M2kCalibrationImpl::adcGainChannel0() const
 	{
 		return m_adc_ch0_gain;
 	}
 
-	double adcGainChannel1() const
+	double M2kCalibrationImpl::adcGainChannel1() const
 	{
 		return m_adc_ch1_gain;
 	}
 
-	void updateDacCorrections()
+	void M2kCalibrationImpl::updateDacCorrections()
 	{
 		m_ad5625_dev->setDoubleValue(0, m_dac_a_ch_offset, "raw", true);
 		m_ad5625_dev->setDoubleValue(1, m_dac_b_ch_offset, "raw", true);
@@ -334,7 +334,7 @@ public:
 		m_m2k_dac->setCalibscale(1, m_dac_default_vlsb / dacBvlsb());
 	}
 
-	void updateAdcCorrections()
+	void M2kCalibrationImpl::updateAdcCorrections()
 	{
 		m_m2k_adc->setAdcCalibOffset(ANALOG_IN_CHANNEL_1, m_adc_ch0_offset);
 		m_m2k_adc->setAdcCalibOffset(ANALOG_IN_CHANNEL_2, m_adc_ch1_offset);
@@ -345,7 +345,7 @@ public:
 		m_m2k_adc->setCalibscale(ANALOG_IN_CHANNEL_2, m_adc_ch1_gain);
 	}
 
-	bool resetCalibration()
+	bool M2kCalibrationImpl::resetCalibration()
 	{
 		if (!m_initialized) {
 			initialize();
@@ -373,7 +373,7 @@ public:
 		return true;
 	}
 
-	bool fine_tune(size_t span, int16_t centerVal0, int16_t centerVal1,
+	bool M2kCalibrationImpl::fine_tune(size_t span, int16_t centerVal0, int16_t centerVal1,
 				       size_t num_samples)
 	{
 		int16_t *candidateOffsets0 = new int16_t[span + 1];
@@ -442,26 +442,26 @@ out_cleanup:
 		return ret;
 	}
 
-	int dacAoffset() const
+	int M2kCalibrationImpl::dacAoffset() const
 	{
 		return m_dac_a_ch_offset;
 	}
 
-	int dacBoffset() const
+	int M2kCalibrationImpl::dacBoffset() const
 	{
 		return m_dac_b_ch_offset;
 	}
 
-	double dacAvlsb() const
+	double M2kCalibrationImpl::dacAvlsb() const
 	{
 		return m_dac_a_ch_vlsb;
 	}
-	double dacBvlsb() const
+	double M2kCalibrationImpl::dacBvlsb() const
 	{
 		return m_dac_b_ch_vlsb;
 	}
 
-	bool calibrateDACoffset()
+	bool M2kCalibrationImpl::calibrateDACoffset()
 	{
 		int16_t tmp;
 		bool calibrated = false;
@@ -554,7 +554,7 @@ out_cleanup:
 		return calibrated;
 	}
 
-	bool calibrateDACgain()
+	bool M2kCalibrationImpl::calibrateDACgain()
 	{
 		int16_t tmp;
 		bool calibrated = false;
@@ -638,7 +638,7 @@ out_cleanup:
 		return calibrated;
 	}
 
-	bool calibrateADC()
+	bool M2kCalibrationImpl::calibrateADC()
 	{
 		bool ok;
 		__try {
@@ -675,7 +675,7 @@ out_cleanup:
 		return false;
 	}
 
-	bool calibrateDAC()
+	bool M2kCalibrationImpl::calibrateDAC()
 	{
 		bool ok;
 		__try {
@@ -721,7 +721,7 @@ out_cleanup:
 		return false;
 	}
 
-	bool calibrateAll()
+	bool M2kCalibrationImpl::calibrateAll()
 	{
 		bool ok;
 		__try {
@@ -753,12 +753,12 @@ out_cleanup:
 		return false;
 	}
 
-	void cancelCalibration()
+	void M2kCalibrationImpl::cancelCalibration()
 	{
 		m_cancel=true;
 	}
 
-	bool setCalibrationMode(int mode)
+	bool M2kCalibrationImpl::setCalibrationMode(int mode)
 	{
 		std::string strMode;
 		switch (mode) {
@@ -785,48 +785,48 @@ out_cleanup:
 		return true;
 	}
 
-	int16_t processRawSample(int16_t value)
+	int16_t M2kCalibrationImpl::processRawSample(int16_t value)
 	{
 		/* 12-bit DAC values must be 16-bit MSB aligned. */
 		return ((-value) << 4);
 	}
 
-private:
-	bool m_cancel;
+//private:
+//	bool m_cancel;
 
-	struct iio_context *m_ctx;
-	M2kAnalogIn* m_m2k_adc;
-	M2kAnalogOut* m_m2k_dac;
-	M2kHardwareTrigger* m_m2k_trigger;
+//	struct iio_context *m_ctx;
+//	M2kAnalogInImpl* m_m2k_adc;
+//	M2kAnalogOut* m_m2k_dac;
+//	M2kHardwareTrigger* m_m2k_trigger;
 
-	int m_adc_ch0_offset;
-	int m_adc_ch1_offset;
-	int m_dac_a_ch_offset;
-	int m_dac_b_ch_offset;
-	double m_adc_ch0_gain;
-	double m_adc_ch1_gain;
-	double m_dac_a_ch_vlsb;
-	double m_dac_b_ch_vlsb;
+//	int m_adc_ch0_offset;
+//	int m_adc_ch1_offset;
+//	int m_dac_a_ch_offset;
+//	int m_dac_b_ch_offset;
+//	double m_adc_ch0_gain;
+//	double m_adc_ch1_gain;
+//	double m_dac_a_ch_vlsb;
+//	double m_dac_b_ch_vlsb;
 
-	M2K_TRIGGER_MODE m_trigger0_mode;
-	M2K_TRIGGER_MODE m_trigger1_mode;
-	M2K_TRIGGER_SOURCE_ANALOG m_trigger_src;
-	double adc_sampl_freq;
-	double adc_oversampl;
-	double dac_a_sampl_freq;
-	double dac_a_oversampl;
-	double dac_b_sampl_freq;
-	double dac_b_oversampl;
+//	M2K_TRIGGER_MODE m_trigger0_mode;
+//	M2K_TRIGGER_MODE m_trigger1_mode;
+//	M2K_TRIGGER_SOURCE_ANALOG m_trigger_src;
+//	double adc_sampl_freq;
+//	double adc_oversampl;
+//	double dac_a_sampl_freq;
+//	double dac_a_oversampl;
+//	double dac_b_sampl_freq;
+//	double dac_b_oversampl;
 
-	bool m_adc_calibrated;
-	bool m_dac_calibrated;
-	bool m_initialized;
-	int m_calibration_mode;
+//	bool m_adc_calibrated;
+//	bool m_dac_calibrated;
+//	bool m_initialized;
+//	int m_calibration_mode;
 
-	std::vector<bool> m_adc_channels_enabled;
-	std::vector<bool> m_dac_channels_enabled;
-	double m_dac_default_vlsb;
+//	std::vector<bool> m_adc_channels_enabled;
+//	std::vector<bool> m_dac_channels_enabled;
+//	double m_dac_default_vlsb;
 
-	std::shared_ptr<libm2k::utils::DeviceGeneric> m_ad5625_dev;
-	std::shared_ptr<libm2k::utils::DeviceGeneric> m_m2k_fabric;
-};
+//	std::shared_ptr<libm2k::utils::DeviceGeneric> m_ad5625_dev;
+//	std::shared_ptr<libm2k::utils::DeviceGeneric> m_m2k_fabric;
+//};

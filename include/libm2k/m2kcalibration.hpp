@@ -35,45 +35,45 @@ namespace libm2k {
 class LIBM2K_API M2kCalibration
 {
 public:
-	M2kCalibration(struct iio_context* ctx, libm2k::analog::M2kAnalogIn* analogIn,
-		       libm2k::analog::M2kAnalogOut* analogOut);
-	virtual ~M2kCalibration();
+//	M2kCalibration(struct iio_context* ctx, libm2k::analog::M2kAnalogIn* analogIn,
+//		       libm2k::analog::M2kAnalogOut* analogOut);
+	virtual ~M2kCalibration() {}
 
-	bool initialize();
-	bool isInitialized() const;
+	virtual bool initialize() = 0;
+	virtual bool isInitialized() const = 0;
 
-	void setAdcInCalibMode();
-	void setDacInCalibMode();
-	void restoreAdcFromCalibMode();
-	void restoreDacFromCalibMode();
+//	virtual void setAdcInCalibMode() = 0;
+//	virtual void setDacInCalibMode() = 0;
+//	virtual void restoreAdcFromCalibMode();
+//	virtual void restoreDacFromCalibMode();
 
-	bool calibrateAll();
-	bool calibrateADC();
-	bool calibrateADCoffset();
-	bool calibrateADCgain();
-	bool calibrateDAC();
-	bool calibrateDACoffset();
-	bool calibrateDACgain();
-	void cancelCalibration();
+	virtual bool calibrateAll() = 0;
+	virtual bool calibrateADC() = 0;
+//	virtual bool calibrateADCoffset();
+//	virtual bool calibrateADCgain();
+	virtual bool calibrateDAC() = 0;
+//	virtual bool calibrateDACoffset();
+//	virtual bool calibrateDACgain();
+	virtual void cancelCalibration() = 0;
 
-	int adcOffsetChannel0() const;
-	int adcOffsetChannel1() const;
-	int dacAoffset() const;
-	int dacBoffset() const;
-	double adcGainChannel0() const;
-	double adcGainChannel1() const;
-	double dacAvlsb() const;
-	double dacBvlsb() const;
+	virtual int adcOffsetChannel0() const = 0;
+	virtual int adcOffsetChannel1() const = 0;
+	virtual int dacAoffset() const = 0;
+	virtual int dacBoffset() const = 0;
+	virtual double adcGainChannel0() const = 0;
+	virtual double adcGainChannel1() const = 0;
+	virtual double dacAvlsb() const = 0;
+	virtual double dacBvlsb() const = 0;
 
-	bool resetCalibration();
-	void updateAdcCorrections();
-	void updateDacCorrections();
+	virtual bool resetCalibration() = 0;
+//	virtual void updateAdcCorrections();
+//	virtual void updateDacCorrections();
 
-	bool setCalibrationMode(int);
+//	virtual bool setCalibrationMode(int);
 
 protected:
-	class M2kCalibrationImpl;
-	std::unique_ptr<M2kCalibrationImpl> m_pimpl;
+//	class M2kCalibrationImpl;
+//	std::unique_ptr<M2kCalibrationImpl> m_pimpl;
 };
 
 }
