@@ -64,24 +64,24 @@ before_deploy:
 deploy:
   - provider: releases
     api_key:
-      secure: SwUgor/ddmI5JMdgjyaQGSp0fxCxHsHAFgq223rSByrn5yCSXarv8O43iQPWSN+1yRlykP/AIsmnVoXroMeOTW8natz4p0DvMO+HF1yrCZCL9kc3zqQOgnNTEAW3KZPFh57+m2F6qsPI57rLyT084oMSNQS3CG2dbYxmnwvZfk+wYU0afvNGFjXqsrBk5/nAcrQzCEKMgQ6ppS6FX1Er7WRsQh29JjClUp3vfbDjAKud/0m5OOIc08BfCWAETwBIX+mYkbX6Dm900c0HcbcCqrZm78Z+9SbnsHKB3f7vKhNa44EbsJ5r7oLvaXhxQsc6eYvF7yVwDINrbfSkUEfyexbVC1gZari5SozNDfuagUtuYwvvNkDNQOoIKSzkq78p4Zr9SJAMvdWnt4n7vIyl4WSod8sFvQkQAJtbt6YqR3IsWrNBwQ30krEA/jpZHoVAGH1kU31Yh4ql86S9lwgmHkdg5byWh6BOJgiBi6bwjHrATn/erPArEMBRtaqKJosPnhyd4mnStAL8fraMvejhwZEMziiDNzgClv7BC4gFJA07ncOIpgePNecdjvGxm4jmr9sK3s8Kumhn37afclqTf2TWCUbSZCkPztR0bB/QcEo0QaJn34+gx8YYziB5WQp9j+CH1D9mscYyA4vwgcpDZebIMg0NMguaCdEjqmP4pU8=
+      secure: buLwkQXbmIREOC1yTL1cVaZW4bbZ2lUajcKzIG64ius+uGxesru8UMVMjCEqYSMDH+NMzuY5QMMrzvRPuc5yjo/0p/t5O2YT5pikt0YJu2jTwvnXtMnhXOQCqk/nHa9t4pJza2WkqTov1BYv7xdYCYexG6dK27IMZd3zMKd3PnRzUe9RBum3mNZrYBpx1QLqaoDjZ9TLZDLLhrAoK7qU0vRTXMEnEYTtCJIYlloo/TQt9dSFEQiUdMfiRp23exDzUlYFmiut3RfvDTuZT1TaLjP8P+zT8sgc10ypxDct2+pOMUfNP/8ZWCTQ5trcfMmyxxKWPn4I2Qy3IyrFBInZwu5C5PxR+DGfsmqofqbN+rbDOhkYljbYH5hn1zmhws3WdU0sRGwbrNQ8LtJ1QEn2SXkx1PZYkjvFMv4LfkI3SxMvuqNNnHKqBa3ovTw7obyvpUb6katX28ampDxTIiXOo1QtOLTz6cxncrT2RnUD3ROK/iS8jJWh+Hnyu9YxAfb1dRWpOXRFBO6XB5++zT/rsU9Q/QyxUV8C6VWY0FvQoFJfeS62OYcxU4g+qnKOPinoLrSO1rnVjVDpudGweQ+ks9IN6/o1tJpt7Xj6zs/BPfCtKr2lZwxYREgfVuTpMXpCbSMdAxdOAxigjuEexwS2vchFu0s4luKRu8Bpq+Hob+M=
     file:
       - "${RELEASE_PKG_FILE_DEB}"
       - "${RELEASE_PY_FILE_DEB}"
       - "${RELEASE_PKG_FILE_TGZ}"
     skip_cleanup: true
     on:
-      repo: analogdevicesinc/libm2k
+      repo: AlexandraTrifan/libm2k
       tags: true
       condition: "($TRAVIS_OS_NAME = linux) && ($OS_TYPE != doxygen)"
   - provider: releases
     api_key:
-      secure: SwUgor/ddmI5JMdgjyaQGSp0fxCxHsHAFgq223rSByrn5yCSXarv8O43iQPWSN+1yRlykP/AIsmnVoXroMeOTW8natz4p0DvMO+HF1yrCZCL9kc3zqQOgnNTEAW3KZPFh57+m2F6qsPI57rLyT084oMSNQS3CG2dbYxmnwvZfk+wYU0afvNGFjXqsrBk5/nAcrQzCEKMgQ6ppS6FX1Er7WRsQh29JjClUp3vfbDjAKud/0m5OOIc08BfCWAETwBIX+mYkbX6Dm900c0HcbcCqrZm78Z+9SbnsHKB3f7vKhNa44EbsJ5r7oLvaXhxQsc6eYvF7yVwDINrbfSkUEfyexbVC1gZari5SozNDfuagUtuYwvvNkDNQOoIKSzkq78p4Zr9SJAMvdWnt4n7vIyl4WSod8sFvQkQAJtbt6YqR3IsWrNBwQ30krEA/jpZHoVAGH1kU31Yh4ql86S9lwgmHkdg5byWh6BOJgiBi6bwjHrATn/erPArEMBRtaqKJosPnhyd4mnStAL8fraMvejhwZEMziiDNzgClv7BC4gFJA07ncOIpgePNecdjvGxm4jmr9sK3s8Kumhn37afclqTf2TWCUbSZCkPztR0bB/QcEo0QaJn34+gx8YYziB5WQp9j+CH1D9mscYyA4vwgcpDZebIMg0NMguaCdEjqmP4pU8=
+      secure: buLwkQXbmIREOC1yTL1cVaZW4bbZ2lUajcKzIG64ius+uGxesru8UMVMjCEqYSMDH+NMzuY5QMMrzvRPuc5yjo/0p/t5O2YT5pikt0YJu2jTwvnXtMnhXOQCqk/nHa9t4pJza2WkqTov1BYv7xdYCYexG6dK27IMZd3zMKd3PnRzUe9RBum3mNZrYBpx1QLqaoDjZ9TLZDLLhrAoK7qU0vRTXMEnEYTtCJIYlloo/TQt9dSFEQiUdMfiRp23exDzUlYFmiut3RfvDTuZT1TaLjP8P+zT8sgc10ypxDct2+pOMUfNP/8ZWCTQ5trcfMmyxxKWPn4I2Qy3IyrFBInZwu5C5PxR+DGfsmqofqbN+rbDOhkYljbYH5hn1zmhws3WdU0sRGwbrNQ8LtJ1QEn2SXkx1PZYkjvFMv4LfkI3SxMvuqNNnHKqBa3ovTw7obyvpUb6katX28ampDxTIiXOo1QtOLTz6cxncrT2RnUD3ROK/iS8jJWh+Hnyu9YxAfb1dRWpOXRFBO6XB5++zT/rsU9Q/QyxUV8C6VWY0FvQoFJfeS62OYcxU4g+qnKOPinoLrSO1rnVjVDpudGweQ+ks9IN6/o1tJpt7Xj6zs/BPfCtKr2lZwxYREgfVuTpMXpCbSMdAxdOAxigjuEexwS2vchFu0s4luKRu8Bpq+Hob+M=
     file:
       - "${RELEASE_PKG_FILE_PKG}"
       - "${RELEASE_PKG_FILE_TGZ}"
     skip_cleanup: true
     on:
-      repo: analogdevicesinc/libm2k
+      repo: AlexandraTrifan/libm2k
       tags: true
       condition: "$TRAVIS_OS_NAME = osx"
