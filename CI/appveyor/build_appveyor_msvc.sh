@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+
 MCS_EXECUTABLE_PATH="C:\Windows\Microsoft.NET\Framework\v4.0.30319"
 OLD_PATH="$PATH"
 
@@ -9,7 +10,8 @@ __build_libm2k() {
 	local PY_VERSION="$2"
 	local PY_PATH="$3"
 	local GENERATOR="$4"
-	local PLAT_NAME="${5:-$PLATFORM}"
+        local GLOG_PLAT_NAME="$5"
+	local PLAT_NAME="${6:-$PLATFORM}"
 
 	# Create the official build directory for this platform
 	mkdir -p "/c/projects/libm2k/build-$PLATFORM/dist"
@@ -22,7 +24,8 @@ __build_libm2k() {
 	cmake -G "$GENERATOR" \
         -DIIO_LIBRARIES:FILEPATH=/c/libiio-"$PLATFORM"/libiio.lib \
         -DIIO_INCLUDE_DIRS:PATH=/c/libiio-"$PLATFORM" \
-        -DCMAKE_CONFIGURATION_TYPES=RELEASE \
+        -DCMAKE_PREFIX_PATH=/c/deps/glog/build_0_3_5"$GLOG_PLAT_NAME"/local_path/glog/lib/cmake/glog \
+        -DCMAKE_CONFIGURATION_TYPES=Release \
         -DSWIG_DIR=/c/swig/Lib \
         -DSWIG_EXECUTABLE=/c/swig/swig.exe \
         -DSWIG_VERSION="4.0.0" \
@@ -51,10 +54,16 @@ __mv_to_build_dir() {
 	cd ..
 }
 
-__build_libm2k win32 37 "/c/Python37" "Visual Studio 15"
-__build_libm2k win32 38 "/c/Python38" "Visual Studio 15"
-__mv_to_build_dir win32
+if [ $1 -eq "64" ]; then
+    __build_libm2k win64 37 "/c/Python37-x64" "Visual Studio 15 Win64" "x64" "win_amd64"
+    __build_libm2k win64 38 "/c/Python38-x64" "Visual Studio 15 Win64" "x64" "win_amd64"
+    __mv_to_build_dir win64
+else
+    __build_libm2k win32 37 "/c/Python37" "Visual Studio 15" "Win32"
+    __build_libm2k win32 38 "/c/Python38" "Visual Studio 15" "Win32"
+    __mv_to_build_dir win32
+fi
 
-__build_libm2k win64 37 "/c/Python37-x64" "Visual Studio 15 Win64" "win_amd64"
-__build_libm2k win64 38 "/c/Python38-x64" "Visual Studio 15 Win64" "win_amd64"
-__mv_to_build_dir win64
+
+
+

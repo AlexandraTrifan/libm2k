@@ -50,11 +50,12 @@ install:
 
 build_script:
     # Download glog
+    - C:\projects\libm2k\CI\appveyor\install_glog.bat "Release" "Win32
+    #- C:\projects\libm2k\CI\appveyor\install_glog.bat "Debug" "Win32"
+    - bash -c "/c/projects/libm2k/CI/appveyor/build_appveyor_msvc.sh 32"
     - C:\projects\libm2k\CI\appveyor\install_glog.bat "Release" "x64"
     - C:\projects\libm2k\CI\appveyor\install_glog.bat "Debug" "x64"
-    - C:\projects\libm2k\CI\appveyor\install_glog.bat "Release" "Win32
-    - C:\projects\libm2k\CI\appveyor\install_glog.bat "Debug" "Win32"
-    - bash -c "/c/projects/libm2k/CI/appveyor/build_appveyor_msvc.sh"
+    - bash -c "/c/projects/libm2k/CI/appveyor/build_appveyor_msvc.sh 64"
     #Create the installer
     - copy "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.16.27012\x86\Microsoft.VC141.CRT\msvcp140.dll" c:\projects\libm2k\build-win32
     - copy "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Redist\MSVC\14.16.27012\x64\Microsoft.VC141.CRT\msvcp140.dll" c:\projects\libm2k\build-win64

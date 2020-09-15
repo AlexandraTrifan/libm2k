@@ -27,6 +27,8 @@
 #define LIBM2K_ATTRIBUTE_READ "read"
 
 #ifdef LIBM2K_ENABLE_LOG
+#define GLOG_NO_ABBREVIATED_SEVERITIES
+#include <windows.h>
 #include <glog/logging.h>
 
 /**

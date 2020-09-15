@@ -11,8 +11,7 @@ if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" (
 
 echo "%generator%"
 echo "%arch%"
-pushd deps
-
+pushd C:\deps 
 set folder_arch=%arch%
 
 if not exist "glog" ( git clone --branch v0.3.5 --depth 1 https://github.com/google/glog )
@@ -21,7 +20,7 @@ git checkout tags/v0.3.5
 if not exist "build_0_3_5%folder_arch%" ( mkdir build_0_3_5%folder_arch% )
 pushd build_0_3_5%folder_arch%
 
-cmake -DWITH_GFLAGS=off -G "%generator%" -A "%arch%" ..
+cmake -DWITH_GFLAGS=off -DCMAKE_INSTALL_PREFIX=./local_path/glog -G "%generator%" -A "%arch%" ..
 
 cmake --build . --target install --config %configuration%
 popd
