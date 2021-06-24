@@ -1,6 +1,22 @@
 #!/bin/bash
 
 set -e
+set PATH=%PATH%
+TOP_DIR=$(pwd)
+
+# Download SWIG
+#cd /c/
+#wget https://sourceforge.net/projects/swig/files/swigwin/swigwin-4.0.0/swigwin-4.0.0.zip
+#7z x swigwin-4.0.0.zip -oswig
+#cd swig/swigwin-4.0.0
+#xcopy * .. /s /e /h /Q
+
+# Download glog
+#cd /c/
+#${TOP_DIR}\CI\appveyor\install_glog.bat "Release" "x64"
+#${TOP_DIR}\CI\appveyor\install_glog.bat "Release" "Win32"
+
+
 MCS_EXECUTABLE_PATH="C:\Windows\Microsoft.NET\Framework\v4.0.30319"
 OLD_PATH="$PATH"
 DEST_LIBIIO="/c/libiio"
