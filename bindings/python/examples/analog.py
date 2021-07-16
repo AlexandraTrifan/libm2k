@@ -43,11 +43,13 @@ ctx.calibrateDAC()
 ain=ctx.getAnalogIn()
 aout=ctx.getAnalogOut()
 trig=ain.getTrigger()
+ain.setKernelBuffersCount(32)
 
 ain.enableChannel(0,True)
 ain.enableChannel(1,True)
-ain.setSampleRate(100000)
+ain.setSampleRate(1000000)
 ain.setRange(0,-10,10)
+ain.setRange(1, 1, 0)
 
 ### uncomment the following block to enable triggering
 #trig.setAnalogSource(0) # Channel 0 as source
@@ -56,25 +58,31 @@ ain.setRange(0,-10,10)
 #trig.setAnalogDelay(0) # Trigger is centered
 #trig.setAnalogMode(1, libm2k.ANALOG)
 
-aout.setSampleRate(0, 750000)
-aout.setSampleRate(1, 750000)
+aout.setSampleRate(0, 75000)
+aout.setSampleRate(1, 75000)
 aout.enableChannel(0, True)
 aout.enableChannel(1, True)
 
 x=np.linspace(-np.pi,np.pi,1024)
-buffer1=np.linspace(-2.0,2.00,1024)
-buffer2=np.sin(x)
-
-buffer = [buffer1, buffer2]
+b1 = np.sin(x);
+b2 = np.linspace(-2.0,2.00,1024)
+buffer=[b1, b2]
 
 aout.setCyclic(True)
 aout.push(buffer)
 
-for i in range(10): # gets 10 triggered samples then quits
-    data = ain.getSamples(1000)
-    plt.plot(data[0])
-    plt.plot(data[1])
-    plt.show()
-    time.sleep(0.1)
+samplesNum = 1000000;
+datafinal = []
+for i in range(2): # gets 10 triggered samples then quits
+    data = ain.getSamplesInterleaved(samplesNum)
+#    data = data.double
+#    data2((k-1)*(samplesNum/2)+1:k*(samplesNum/2)) = data(2:2:end)
+    datafinal += data   
 
+
+#    plt.plot(data[0])
+#    plt.plot(data[1])
+#    plt.show()
+#    time.sleep(0.1)
+plt.plot(datafinal)
 libm2k.contextClose(ctx)

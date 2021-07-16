@@ -115,6 +115,7 @@ int main()
 	M2kDigital *dig = ctx->getDigital();
 	M2kHardwareTrigger *trig = dig->getTrigger();
 
+	dig->setKernelBuffersCountIn(KERNEL_BUFFERS_COUNT);
 	while(sr_divider > 1) {
 		sample_rate_in = MAX_SAMPLE_RATE / sr_divider;
 		sample_rate_out = MAX_SAMPLE_RATE / (sr_divider*4);
@@ -123,7 +124,6 @@ int main()
 		dig->setSampleRateIn(sample_rate_in + 1);
 		dig->setSampleRateOut(sample_rate_out + 1);
 		// set number of kernel buffers for the digital input interface
-		dig->setKernelBuffersCountIn(KERNEL_BUFFERS_COUNT);
 		trig->setDigitalStreamingFlag(true);
 
 		for(int i=0;i<N_BITS;i++)

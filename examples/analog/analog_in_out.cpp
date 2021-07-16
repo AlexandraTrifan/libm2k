@@ -60,13 +60,15 @@ int main(int argc, char* argv[])
 #ifdef TRIGGERING
 	M2kHardwareTrigger *trig = ain->getTrigger();
 #endif
+	M2kHardwareTrigger *trig = ain->getTrigger();
 
 	// Setup analog in
 	ain->enableChannel(0, true);
 	ain->enableChannel(1, true);
-	ain->setSampleRate(100000);
-	ain->setRange((ANALOG_IN_CHANNEL)0,-10.0,10.0);
+	ain->setSampleRate(100000000);
+	ain->setRange((ANALOG_IN_CHANNEL)0,PLUS_MINUS_25V);
 	ain->setRange((ANALOG_IN_CHANNEL)1,PLUS_MINUS_25V);
+	ain->setKernelBuffersCount(1);
 
 #ifdef TRIGGERING
 	// setup analog trigger
@@ -76,6 +78,7 @@ int main(int argc, char* argv[])
 	trig->setAnalogDelay(0);
 	trig->setAnalogMode(0,ANALOG);
 #endif
+	trig->setAnalogMode(0,ALWAYS);
 
 	// setup analog output
 	aout->setSampleRate(0,750000);
@@ -84,27 +87,38 @@ int main(int argc, char* argv[])
 	aout->enableChannel(1, true);
 
 	// create output buffers
-	vector<double> sinv;
+	vector<short> sinv;
+	vector<double> sinv2;
 	vector<double> saw;
 
 	for(int i=0;i<1024;i++)
 	{
 		double rad = 2*M_PI*(i/1024.0);
 		double val = sin(rad);
-		sinv.push_back(val);
-		saw.push_back((2*i)/1024.0);
+		sinv.push_back(aout->convertVoltsToRaw(0, 2.45));
+		sinv2.push_back(2.2);
+//		std::cout << aout->convertVoltsToRaw(0, 2.45) << " here here\n";
+		saw.push_back(2.3);
 	}
 
 	aout->setCyclic(true);
-	aout->push({sinv,saw});
+//	aout->pushRawBytes(0, sinv.data(), 1024);
+//	aout->pushRaw(0, sinv);
+//	aout->pushRaw(0, sinv);
+	aout->pushRawBytes(0, sinv.data(), sinv.size());
+//	aout->pushBytes(0, sinv2.data(), sinv2.size());
+	aout->push({sinv2,saw});
 
-	auto data = ain->getSamples(1024);
+//	for (unsigned int i = 0; i < 5; i++) {
+		auto data = ain->getSamples(1024);
 
-	cout << "CHANNEL1"<<endl;
-	for(double val : data[0])
-	{
-		cout<<val<<endl;
-	}
+		cout << "CHANNEL1"<<endl;
+		for(double val : data[0])
+		{
+			cout<<val<<endl;
+		}
+//	}
+
 	cout << "CHANNEL2"<<endl;
 	for(double val : data[1])
 	{

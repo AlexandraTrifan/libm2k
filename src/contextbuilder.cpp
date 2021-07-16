@@ -41,7 +41,8 @@ using namespace libm2k::utils;
 std::vector<Context*> ContextBuilder::s_connectedDevices = {};
 std::map<ContextTypes, std::vector<std::string>> ContextBuilder::m_dev_map = {
 	{ContextTypes::CtxFMCOMMS, {"cf-ad9361-lpc", "cf-ad9361-dds-core-lpc", "ad9361-phy"}},
-	{ContextTypes::CtxM2K, {"m2k-adc", "m2k-dac-a",
+	{ContextTypes::CtxM2K, {
+	 "m2k-adc", "m2k-dac-a",
 				"m2k-dac-b", "m2k-logic-analyzer-rx",
 				"m2k-logic-analyzer-tx", "m2k-logic-analyzer"}},
 	{ContextTypes::CtxLIDAR, {"ad7091", "ltc2471", "xadc", "ad5627", "ad9528",
